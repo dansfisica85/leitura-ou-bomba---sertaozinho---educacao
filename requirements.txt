@@ -1,0 +1,2 @@
+# Não há dependências externas necessárias
+# Todas as bibliotecas usadas são built-in do Python

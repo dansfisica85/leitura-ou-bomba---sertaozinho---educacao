@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leitura ou Bomba</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        /* Tela de Cadastro */
+        .register-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .register-screen input {
+            padding: 15px 25px;
+            font-size: 1.2em;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .register-screen input:focus {
+            border-color: #764ba2;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Botão INICIAR grande e redondo */
+        .start-btn {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            border: none;
+            color: white;
+            font-size: 1.8em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(72, 187, 120, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(72, 187, 120, 0.5);
+        }
+
+        .start-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Contagem Regressiva */
+        .countdown-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .countdown-number {
+            font-size: 15em;
+            color: white;
+            font-weight: bold;
+            animation: countdownPulse 1s ease-in-out;
+        }
+
+        @keyframes countdownPulse {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Cronômetro */
+        .timer-display {
+            font-size: 3.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .timer-display.warning {
+            color: #ed8936;
+        }
+
+        .timer-display.danger {
+            color: #f56565;
+            animation: blink 0.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Área do Jogo */
+        .game-screen {
+            display: none;
+        }
+
+        .word-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 60px 40px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 3.5em;
+            font-weight: bold;
+            margin-bottom: 30px;
+            min-height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Indicador de Gravação */
+        .recording-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            color: #f56565;
+        }
+
+        .recording-dot {
+            width: 20px;
+            height: 20px;
+            background: #f56565;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .result {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .result.success {
+            background: #c6f6d5;
+            color: #22543d;
+            border: 2px solid #48bb78;
+        }
+
+        .result.error {
+            background: #fed7d7;
+            color: #742a2a;
+            border: 2px solid #f56565;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Tela de Resultados */
+        .results-screen {
+            display: none;
+        }
+
+        .final-score {
+            font-size: 4em;
+            color: #48bb78;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .ranking-title {
+            font-size: 1.8em;
+            color: #667eea;
+            margin: 30px 0 20px 0;
+        }
+
+        .ranking-list {
+            list-style: none;
+            padding: 0;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            margin: 10px 0;
+            background: #f7fafc;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+
+        .ranking-item.gold {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-left-color: #f6ad55;
+        }
+
+        .ranking-item.silver {
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%);
+            border-left-color: #a0aec0;
+        }
+
+        .ranking-item.bronze {
+            background: linear-gradient(135deg, #feebc8 0%, #f6ad55 100%);
+            border-left-color: #dd6b20;
+        }
+
+        .ranking-position {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #667eea;
+            min-width: 40px;
+        }
+
+        .ranking-name {
+            flex: 1;
+            text-align: left;
+            margin-left: 15px;
+            font-size: 1.2em;
+        }
+
+        .ranking-score {
+            font-weight: bold;
+            font-size: 1.3em;
+            color: #48bb78;
+        }
+
+        .btn-restart {
+            padding: 15px 40px;
+            font-size: 1.2em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .btn-restart:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .user-greeting {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        /* Rodapé */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 0.85em;
+            color: #666;
+            box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .footer p {
+            margin: 3px 0;
+        }
+
+        .footer .author {
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .footer .usage {
+            color: #48bb78;
+            font-weight: 600;
+        }
+
+        .container {
+            margin-bottom: 120px;
+        }
+
+        /* Botão de reset discreto */
+        .reset-btn {
+            background: transparent;
+            border: none;
+            color: #ccc;
+            font-size: 0.7em;
+            cursor: pointer;
+            padding: 5px 10px;
+            margin-top: 5px;
+            transition: color 0.3s;
+        }
+
+        .reset-btn:hover {
+            color: #999;
+        }
+
+        /* Modal de senha */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 350px;
+            width: 90%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-content h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1em;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+
+        .modal-content input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .modal-btn {
+            padding: 10px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: transform 0.2s;
+        }
+
+        .modal-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .modal-btn.confirm {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .modal-btn.cancel {
+            background: #e2e8f0;
+            color: #666;
+        }
+
+        .modal-error {
+            color: #e53e3e;
+            font-size: 0.85em;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Leitura ou Bomba</h1>
+
+        <!-- Tela de Cadastro -->
+        <div id="registerScreen" class="register-screen">
+            <p style="font-size: 1.2em; color: #666;">Digite seu nome para começar:</p>
+            <input type="text" id="userName" placeholder="Seu nome" maxlength="30" autocomplete="off">
+            <button id="startBtn" class="start-btn" onclick="startCountdown()" disabled>
+                INICIAR
+            </button>
+        </div>
+
+        <!-- Contagem Regressiva (overlay) -->
+        <div id="countdownOverlay" class="countdown-overlay hidden">
+            <div id="countdownNumber" class="countdown-number">3</div>
+        </div>
+
+        <!-- Tela do Jogo -->
+        <div id="gameScreen" class="game-screen">
+            <p id="userGreeting" class="user-greeting"></p>
+            <div id="timerDisplay" class="timer-display">01:30</div>
+            
+            <div class="recording-indicator">
+                <div class="recording-dot"></div>
+                <span>Gravando...</span>
+            </div>
+
+            <div id="wordDisplay" class="word-display">
+                Preparando...
+            </div>
+
+            <div id="result" class="result hidden"></div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="correctCount">0</div>
+                    <div class="stat-label">✅ Corretas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="incorrectCount">0</div>
+                    <div class="stat-label">❌ Incorretas</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalCount">0</div>
+                    <div class="stat-label">📊 Total</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tela de Resultados -->
+        <div id="resultsScreen" class="results-screen">
+            <h2 style="color: #667eea;">⏰ Tempo Esgotado!</h2>
+            <p id="finalUserName" style="font-size: 1.3em; color: #666; margin-top: 10px;"></p>
+            <div class="final-score" id="finalScore">0</div>
+            <p style="color: #666;">palavras corretas</p>
+
+            <h3 class="ranking-title">🏆 Ranking</h3>
+            <ul id="rankingList" class="ranking-list"></ul>
+
+            <button class="btn-restart" onclick="restartGame()">🔄 Jogar Novamente</button>
+        </div>
+    </div>
+
+    <script>
+        // ===== PALAVRAS DOS ARQUIVOS CSV =====
+        const palavrasReais = [
+            "bala", "búfalo", "faca", "batata", "bula", "dourado", "fala",
+            "baú", "buzina", "doçura", "fada", "banana", "buda", "dúvida", "favela",
+            "banco", "casa", "duelo", "ferida", "bebê", "caneta", "feijão",
+            "bebida", "cama", "dúzia", "besouro", "cadeado", "dureza", "fera",
+            "bexiga", "calo", "festa", "fivela", "bico", "cebola", "transporte", "fita",
+            "biruta", "cenoura", "filho", "figo", "bibelô", "cedo", "cárie", "fiado",
+            "bife", "cera", "escola", "filó", "bica", "cega", "terno", "fogo",
+            "bola", "cidade", "futebol", "foca", "boca", "exército", "fome",
+            "bota", "cipó", "foto", "fobia", "bode", "futuro", "fubá",
+            "boneca", "coroa", "fumaça", "fumo", "bule", "copo", "fugiu", "carta",
+            "buraco", "cola", "comida", "janela", "couro", "amarelo", "couve",
+            "lesma", "cuíca", "garra", "cuba", "felino", "cubo", "correnteza", "cupido",
+            "picada", "cuidado", "dinheiro", "dama", "barba", "dado", "jaula",
+            "farelo", "data", "tosse", "dever", "jovem", "dedo",
+            "selva", "feitiço", "torta", "rosa", "delícia", "demora",
+            "chinelo", "dia", "inseto", "ditado", "grade",
+            "meia", "acerola", "doce", "dona", "família",
+            "fermento", "leite", "caderno", "machucado", "gola", "rede", "terra", "criança", "saxofone"
+        ];
+
+        const pseudoPalavras = [
+            "belate", "cerebo", "tataba", "golamo", "baupi", "terrano", "dapeco",
+            "bobelo", "calelo", "cenaba", "redela", "betouro", "gaxiba", "caraba",
+            "bicoça", "cegeno", "rubita", "cirata", "belibo", "digano", "calipo",
+            "nola", "cifroa", "futesa", "copico", "camanjo", "rotaba", "colena",
+            "bodela", "necabo", "couroba", "burilo", "cartamo", "racubo", "cuipó",
+            "jamelo", "fubalo", "cumalo", "almara", "lalubo", "cupado", "lesnaga",
+            "zinama", "dudica", "garelho", "dadubo", "gradel", "fesona", "celapa",
+            "meola", "colenga", "picamo", "caneto", "dinhelo", "didoba", "barfalo",
+            "jaulare", "faretos", "delota", "tessenho", "jovenso", "tatado", "selvaço",
+            "viba", "torrosa", "cocena", "chineto", "nanato", "insedro", "radona",
+            "taxiglo", "sabaca", "duzima", "ternal", "brisote", "flumena", "grapefo",
+            "plimoca", "drofila", "cranteba", "flosiga", "tremulo", "vaspino", "bruleca"
+        ];
+
+        // Remover duplicatas
+        const uniqueReais = [...new Set(palavrasReais)];
+        const uniquePseudo = [...new Set(pseudoPalavras)];
+
+        // ===== VARIÁVEIS GLOBAIS =====
+        let currentWord = '';
+        let isRealWord = true;
+        let usedRealWords = [];
+        let usedPseudoWords = [];
+        let recognition = null;
+        let timerInterval = null;
+        let timeRemaining = 90;
+        let userName = '';
+        let stats = { correct: 0, incorrect: 0, total: 0 };
+
+        // ===== INICIALIZAÇÃO =====
+        document.getElementById('userName').addEventListener('input', function() {
+            document.getElementById('startBtn').disabled = this.value.trim().length < 2;
+        });
+
+        document.getElementById('userName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && this.value.trim().length >= 2) {
+                startCountdown();
+            }
+        });
+
+        // Inicializar Web Speech API
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            recognition = new SpeechRecognition();
+            recognition.lang = 'pt-BR';
+            recognition.continuous = true;
+            recognition.interimResults = false;
+
+            recognition.onresult = (event) => {
+                const lastResult = event.results[event.results.length - 1];
+                if (lastResult.isFinal) {
+                    const transcript = lastResult[0].transcript.toLowerCase().trim();
+                    checkWord(transcript);
+                }
+            };
+
+            recognition.onerror = (event) => {
+                console.error('Erro no reconhecimento:', event.error);
+                if (event.error !== 'no-speech' && timerInterval) {
+                    setTimeout(() => {
+                        try { recognition.start(); } catch(e) {}
+                    }, 100);
+                }
+            };
+
+            recognition.onend = () => {
+                if (timerInterval) {
+                    try { recognition.start(); } catch(e) {}
+                }
+            };
+        } else {
+            alert('Seu navegador não suporta reconhecimento de voz. Use Chrome ou Edge.');
+        }
+
+        // ===== FUNÇÕES =====
+        function startCountdown() {
+            userName = document.getElementById('userName').value.trim();
+            if (userName.length < 2) return;
+
+            document.getElementById('registerScreen').classList.add('hidden');
+            document.getElementById('countdownOverlay').classList.remove('hidden');
+
+            let count = 3;
+            const countdownEl = document.getElementById('countdownNumber');
+            countdownEl.textContent = count;
+            
+            const countdownInterval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdownEl.textContent = count;
+                    countdownEl.style.animation = 'none';
+                    countdownEl.offsetHeight;
+                    countdownEl.style.animation = 'countdownPulse 1s ease-in-out';
+                } else if (count === 0) {
+                    countdownEl.textContent = 'VAI!';
+                    countdownEl.style.animation = 'none';
+                    countdownEl.offsetHeight;
+                    countdownEl.style.animation = 'countdownPulse 1s ease-in-out';
+                } else {
+                    clearInterval(countdownInterval);
+                    document.getElementById('countdownOverlay').classList.add('hidden');
+                    startGame();
+                }
+            }, 1000);
+        }
+
+        function startGame() {
+            stats = { correct: 0, incorrect: 0, total: 0 };
+            usedRealWords = [];
+            usedPseudoWords = [];
+            isRealWord = true;
+            timeRemaining = 90;
+
+            document.getElementById('gameScreen').style.display = 'block';
+            document.getElementById('userGreeting').textContent = `Jogador: ${userName}`;
+            updateStats();
+
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                updateTimerDisplay();
+                if (timeRemaining <= 0) {
+                    endGame();
+                }
+            }, 1000);
+
+            if (recognition) {
+                try { recognition.start(); } catch(e) {}
+            }
+
+            getNextWord();
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            const display = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            const timerEl = document.getElementById('timerDisplay');
+            timerEl.textContent = display;
+            
+            timerEl.classList.remove('warning', 'danger');
+            if (timeRemaining <= 10) {
+                timerEl.classList.add('danger');
+            } else if (timeRemaining <= 30) {
+                timerEl.classList.add('warning');
+            }
+        }
+
+        function getNextWord() {
+            let wordList;
+            
+            if (isRealWord) {
+                wordList = uniqueReais.filter(w => !usedRealWords.includes(w));
+                if (wordList.length === 0) {
+                    usedRealWords = [];
+                    wordList = uniqueReais;
+                }
+                currentWord = wordList[Math.floor(Math.random() * wordList.length)];
+                usedRealWords.push(currentWord);
+            } else {
+                wordList = uniquePseudo.filter(w => !usedPseudoWords.includes(w));
+                if (wordList.length === 0) {
+                    usedPseudoWords = [];
+                    wordList = uniquePseudo;
+                }
+                currentWord = wordList[Math.floor(Math.random() * wordList.length)];
+                usedPseudoWords.push(currentWord);
+            }
+
+            isRealWord = !isRealWord;
+            document.getElementById('wordDisplay').textContent = currentWord.toUpperCase();
+            document.getElementById('result').classList.add('hidden');
+        }
+
+        function normalizeText(text) {
+            text = text.toLowerCase().trim();
+            const replacements = {
+                'á': 'a', 'à': 'a', 'ã': 'a', 'â': 'a',
+                'é': 'e', 'ê': 'e', 'í': 'i',
+                'ó': 'o', 'ô': 'o', 'õ': 'o',
+                'ú': 'u', 'ü': 'u', 'ç': 'c'
+            };
+            for (let [old, newChar] of Object.entries(replacements)) {
+                text = text.replace(new RegExp(old, 'g'), newChar);
+            }
+            return text;
+        }
+
+        function calculateSimilarity(s1, s2) {
+            const longer = s1.length > s2.length ? s1 : s2;
+            const shorter = s1.length > s2.length ? s2 : s1;
+            if (longer.length === 0) return 100;
+            const editDistance = getEditDistance(longer, shorter);
+            return Math.round((1 - editDistance / longer.length) * 100);
+        }
+
+        function getEditDistance(s1, s2) {
+            s1 = s1.toLowerCase();
+            s2 = s2.toLowerCase();
+            const costs = [];
+            for (let i = 0; i <= s1.length; i++) {
+                let lastValue = i;
+                for (let j = 0; j <= s2.length; j++) {
+                    if (i === 0) {
+                        costs[j] = j;
+                    } else if (j > 0) {
+                        let newValue = costs[j - 1];
+                        if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
+                            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+                        }
+                        costs[j - 1] = lastValue;
+                        lastValue = newValue;
+                    }
+                }
+                if (i > 0) costs[s2.length] = lastValue;
+            }
+            return costs[s2.length];
+        }
+
+        function checkWord(spokenWord) {
+            const expected = normalizeText(currentWord);
+            const spoken = normalizeText(spokenWord);
+            const similarity = calculateSimilarity(expected, spoken);
+            const isCorrect = similarity >= 75;
+            
+            if (isCorrect) {
+                stats.correct++;
+                showResult(`✅ "${spokenWord}"`, 'success');
+            } else {
+                stats.incorrect++;
+                showResult(`❌ "${spokenWord}" (${similarity}%)`, 'error');
+            }
+
+            stats.total++;
+            updateStats();
+            setTimeout(getNextWord, 600);
+        }
+
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = `result ${type}`;
+            resultDiv.innerHTML = message;
+            resultDiv.classList.remove('hidden');
+        }
+
+        function updateStats() {
+            document.getElementById('correctCount').textContent = stats.correct;
+            document.getElementById('incorrectCount').textContent = stats.incorrect;
+            document.getElementById('totalCount').textContent = stats.total;
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            timerInterval = null;
+            if (recognition) {
+                try { recognition.stop(); } catch(e) {}
+            }
+
+            saveToRanking(userName, stats.correct);
+
+            document.getElementById('gameScreen').style.display = 'none';
+            document.getElementById('resultsScreen').style.display = 'block';
+            document.getElementById('finalUserName').textContent = `Parabéns, ${userName}!`;
+            document.getElementById('finalScore').textContent = stats.correct;
+
+            displayRanking();
+        }
+
+        function saveToRanking(name, score) {
+            let ranking = JSON.parse(localStorage.getItem('leituraOuBombaRanking') || '[]');
+            ranking.push({
+                name: name,
+                score: score,
+                date: new Date().toLocaleDateString('pt-BR')
+            });
+            ranking.sort((a, b) => b.score - a.score);
+            ranking = ranking.slice(0, 20);
+            localStorage.setItem('leituraOuBombaRanking', JSON.stringify(ranking));
+        }
+
+        function displayRanking() {
+            const ranking = JSON.parse(localStorage.getItem('leituraOuBombaRanking') || '[]');
+            const listEl = document.getElementById('rankingList');
+            listEl.innerHTML = '';
+
+            ranking.forEach((entry, index) => {
+                const li = document.createElement('li');
+                li.className = 'ranking-item';
+                
+                if (index === 0) li.classList.add('gold');
+                else if (index === 1) li.classList.add('silver');
+                else if (index === 2) li.classList.add('bronze');
+
+                const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}º`;
+
+                li.innerHTML = `
+                    <span class="ranking-position">${medal}</span>
+                    <span class="ranking-name">${entry.name}</span>
+                    <span class="ranking-score">${entry.score} ✅</span>
+                `;
+                listEl.appendChild(li);
+            });
+
+            if (ranking.length === 0) {
+                listEl.innerHTML = '<li class="ranking-item">Nenhum registro ainda</li>';
+            }
+        }
+
+        function restartGame() {
+            document.getElementById('resultsScreen').style.display = 'none';
+            document.getElementById('registerScreen').classList.remove('hidden');
+            document.getElementById('userName').value = '';
+            document.getElementById('startBtn').disabled = true;
+            document.getElementById('result').classList.add('hidden');
+        }
+    </script>
+
+    <!-- Modal de Senha para Reset -->
+    <div id="resetModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>🔐 Área Restrita</h3>
+            <p style="color: #666; margin-bottom: 15px;">Digite a senha para resetar o ranking:</p>
+            <input type="password" id="resetPassword" placeholder="Senha" autocomplete="off">
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" onclick="closeResetModal()">Cancelar</button>
+                <button class="modal-btn confirm" onclick="confirmReset()">Confirmar</button>
+            </div>
+            <p id="resetError" class="modal-error">Senha incorreta!</p>
+        </div>
+    </div>
+
+    <!-- Rodapé -->
+    <footer class="footer">
+        <p class="author">Profº Davi Antonino Nunes da Silva</p>
+        <p>📞 Contato: (16) 99260-4315</p>
+        <p>📧 davi.silva@educacao.sp.gov.br | professordavi85@gmail.com</p>
+        <p class="usage">Para uso gratuito da Secretaria de Educação do Município de Sertãozinho</p>
+        <button class="reset-btn" onclick="openResetModal()" title="Área administrativa">⚙️ Admin</button>
+    </footer>
+</body>
+</html>
