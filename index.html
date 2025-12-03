@@ -1644,19 +1644,36 @@
 
         function normalizeText(text) {
             text = text.toLowerCase().trim();
-            // Remover pontuação
-            text = text.replace(/[.,!?;:'"()]/g, '');
+            // Remover pontuação e caracteres especiais
+            text = text.replace(/[.,!?;:'"()\-_]/g, '');
+            // Remover espaços extras
+            text = text.replace(/\s+/g, ' ').trim();
+            
+            // Substituições de acentos
             const replacements = {
                 'á': 'a', 'à': 'a', 'ã': 'a', 'â': 'a', 'ä': 'a',
-                'é': 'e', 'ê': 'e', 'ë': 'e',
-                'í': 'i', 'ï': 'i',
-                'ó': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o',
+                'é': 'e', 'ê': 'e', 'ë': 'e', 'è': 'e',
+                'í': 'i', 'ï': 'i', 'ì': 'i',
+                'ó': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o', 'ò': 'o',
                 'ú': 'u', 'ü': 'u', 'ù': 'u',
                 'ç': 'c', 'ñ': 'n'
             };
             for (let [old, newChar] of Object.entries(replacements)) {
                 text = text.replace(new RegExp(old, 'g'), newChar);
             }
+            
+            // Correções fonéticas comuns em português brasileiro
+            // Sons similares que o reconhecimento pode confundir
+            text = text.replace(/ss/g, 's');
+            text = text.replace(/rr/g, 'r');
+            text = text.replace(/ll/g, 'l');
+            text = text.replace(/nn/g, 'n');
+            text = text.replace(/mm/g, 'm');
+            text = text.replace(/x/g, 's'); // x pode soar como s
+            text = text.replace(/ch/g, 'x'); // ch soa como x
+            text = text.replace(/lh/g, 'li'); // lh pode ser ouvido como li
+            text = text.replace(/nh/g, 'ni'); // nh pode ser ouvido como ni
+            
             return text;
         }
 
