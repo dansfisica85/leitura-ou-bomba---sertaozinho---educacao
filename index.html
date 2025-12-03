@@ -539,6 +539,29 @@
         </div>
     </div>
 
+    <!-- Modal de Senha para Reset -->
+    <div id="resetModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>🔐 Área Restrita</h3>
+            <p style="color: #666; margin-bottom: 15px;">Digite a senha para resetar o ranking:</p>
+            <input type="password" id="resetPassword" placeholder="Senha" autocomplete="off">
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" onclick="closeResetModal()">Cancelar</button>
+                <button class="modal-btn confirm" onclick="confirmReset()">Confirmar</button>
+            </div>
+            <p id="resetError" class="modal-error">Senha incorreta!</p>
+        </div>
+    </div>
+
+    <!-- Rodapé -->
+    <footer class="footer">
+        <p class="author">Profº Davi Antonino Nunes da Silva</p>
+        <p>📞 Contato: (16) 99260-4315</p>
+        <p>📧 davi.silva@educacao.sp.gov.br | professordavi85@gmail.com</p>
+        <p class="usage">Para uso gratuito da Secretaria de Educação do Município de Sertãozinho</p>
+        <button class="reset-btn" onclick="openResetModal()" title="Área administrativa">⚙️ Admin</button>
+    </footer>
+
     <script>
         // ===== PALAVRAS DOS ARQUIVOS CSV =====
         const palavrasReais = [
@@ -833,6 +856,7 @@
         }
 
         function saveToRanking(name, score) {
+            // Salvar localmente primeiro
             let ranking = JSON.parse(localStorage.getItem('leituraOuBombaRanking') || '[]');
             ranking.push({
                 name: name,
@@ -842,6 +866,50 @@
             ranking.sort((a, b) => b.score - a.score);
             ranking = ranking.slice(0, 20);
             localStorage.setItem('leituraOuBombaRanking', JSON.stringify(ranking));
+            
+            // Tentar salvar no servidor (GitHub via API)
+            if (!isLocalhost) {
+                fetch('/api/ranking', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: name, score: score })
+                }).then(response => response.json())
+                .then(data => {
+                    if (data.ranking) {
+                        // Mesclar ranking do servidor com local
+                        mergeRankings(data.ranking);
+                    }
+                }).catch(err => console.log('Erro ao salvar no servidor:', err));
+            }
+        }
+        
+        function mergeRankings(serverRanking) {
+            let localRanking = JSON.parse(localStorage.getItem('leituraOuBombaRanking') || '[]');
+            
+            // Combinar e ordenar
+            serverRanking.forEach(entry => {
+                if (!localRanking.some(local => local.name === entry.name && local.score === entry.score)) {
+                    localRanking.push(entry);
+                }
+            });
+            
+            localRanking.sort((a, b) => b.score - a.score);
+            localRanking = localRanking.slice(0, 20);
+            localStorage.setItem('leituraOuBombaRanking', JSON.stringify(localRanking));
+        }
+        
+        async function loadRankingFromServer() {
+            if (!isLocalhost) {
+                try {
+                    const response = await fetch('/api/ranking');
+                    const data = await response.json();
+                    if (data.ranking && data.ranking.length > 0) {
+                        mergeRankings(data.ranking);
+                    }
+                } catch(err) {
+                    console.log('Erro ao carregar ranking do servidor:', err);
+                }
+            }
         }
 
         function displayRanking() {
@@ -871,6 +939,69 @@
                 listEl.innerHTML = '<li class="ranking-item">Nenhum registro ainda</li>';
             }
         }
+        
+        // ===== FUNÇÕES DO MODAL DE RESET =====
+        function openResetModal() {
+            document.getElementById('resetModal').classList.add('active');
+            document.getElementById('resetPassword').value = '';
+            document.getElementById('resetError').style.display = 'none';
+            document.getElementById('resetPassword').focus();
+        }
+        
+        function closeResetModal() {
+            document.getElementById('resetModal').classList.remove('active');
+            document.getElementById('resetPassword').value = '';
+            document.getElementById('resetError').style.display = 'none';
+        }
+        
+        async function confirmReset() {
+            const password = document.getElementById('resetPassword').value;
+            
+            if (password === 'Camila') {
+                // Limpar ranking local
+                localStorage.removeItem('leituraOuBombaRanking');
+                
+                // Tentar limpar no servidor
+                if (!isLocalhost) {
+                    try {
+                        await fetch('/api/ranking', {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ password: password })
+                        });
+                    } catch(err) {
+                        console.log('Erro ao resetar no servidor:', err);
+                    }
+                }
+                
+                closeResetModal();
+                alert('✅ Ranking resetado com sucesso!');
+                
+                // Atualizar display se estiver na tela de resultados
+                displayRanking();
+            } else {
+                document.getElementById('resetError').style.display = 'block';
+                document.getElementById('resetPassword').value = '';
+                document.getElementById('resetPassword').focus();
+            }
+        }
+        
+        // Permitir Enter no campo de senha
+        document.getElementById('resetPassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                confirmReset();
+            }
+        });
+        
+        // Fechar modal clicando fora
+        document.getElementById('resetModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeResetModal();
+            }
+        });
+        
+        // Carregar ranking do servidor ao iniciar
+        loadRankingFromServer();
 
         function restartGame() {
             document.getElementById('resultsScreen').style.display = 'none';
@@ -880,28 +1011,5 @@
             document.getElementById('result').classList.add('hidden');
         }
     </script>
-
-    <!-- Modal de Senha para Reset -->
-    <div id="resetModal" class="modal-overlay">
-        <div class="modal-content">
-            <h3>🔐 Área Restrita</h3>
-            <p style="color: #666; margin-bottom: 15px;">Digite a senha para resetar o ranking:</p>
-            <input type="password" id="resetPassword" placeholder="Senha" autocomplete="off">
-            <div class="modal-buttons">
-                <button class="modal-btn cancel" onclick="closeResetModal()">Cancelar</button>
-                <button class="modal-btn confirm" onclick="confirmReset()">Confirmar</button>
-            </div>
-            <p id="resetError" class="modal-error">Senha incorreta!</p>
-        </div>
-    </div>
-
-    <!-- Rodapé -->
-    <footer class="footer">
-        <p class="author">Profº Davi Antonino Nunes da Silva</p>
-        <p>📞 Contato: (16) 99260-4315</p>
-        <p>📧 davi.silva@educacao.sp.gov.br | professordavi85@gmail.com</p>
-        <p class="usage">Para uso gratuito da Secretaria de Educação do Município de Sertãozinho</p>
-        <button class="reset-btn" onclick="openResetModal()" title="Área administrativa">⚙️ Admin</button>
-    </footer>
 </body>
 </html>

@@ -59,6 +59,29 @@ vercel
 5. Selecione seu repositório
 6. Clique em "Deploy"
 
+### Configurar Ranking no GitHub (Opcional)
+
+Para que o ranking seja persistido no repositório do GitHub:
+
+1. Crie um **Personal Access Token** no GitHub:
+   - Acesse: GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)
+   - Gere um novo token com permissão `repo`
+
+2. No Vercel, adicione as variáveis de ambiente:
+   - `GITHUB_TOKEN`: Seu token pessoal do GitHub
+   - `GITHUB_REPO`: Nome do repositório (formato: `usuario/repositorio`)
+
+3. Faça redeploy do projeto
+
+**Obs:** Sem essa configuração, o ranking funciona apenas localmente no navegador.
+
+## 🔐 Área Administrativa
+
+Para resetar o ranking:
+1. Clique no botão "⚙️ Admin" discreto no rodapé
+2. Digite a senha de administrador
+3. Confirme para limpar todo o ranking
+
 ## 🎮 Como Usar
 
 1. Digite seu nome no campo de cadastro
@@ -72,7 +95,9 @@ vercel
 ## 🔧 Tecnologias Utilizadas
 
 - **Frontend**: HTML5, CSS3, JavaScript (Web Speech API)
+- **Backend**: Python (Serverless Functions para ranking)
 - **Hospedagem**: Vercel
+- **Armazenamento**: GitHub API (ranking persistente)
 - **Reconhecimento de Voz**: Web Speech API
 
 ## ⚠️ Requisitos
