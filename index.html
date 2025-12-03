@@ -583,6 +583,531 @@
             margin-top: 10px;
             display: none;
         }
+
+        /* ===== RESPONSIVIDADE ===== */
+        
+        /* Tablets e telas médias */
+        @media screen and (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .container {
+                padding: 25px 20px;
+                border-radius: 15px;
+                margin-bottom: 90px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+                margin-bottom: 8px;
+            }
+
+            .video-header {
+                max-width: 140px;
+                margin-bottom: 10px;
+            }
+
+            .start-btn {
+                width: 160px;
+                height: 160px;
+                font-size: 1.4em;
+            }
+
+            .start-btn::before {
+                font-size: 1.6em;
+                top: 15px;
+            }
+
+            .start-btn span {
+                top: 25px;
+            }
+
+            .register-screen input {
+                padding: 12px 20px;
+                font-size: 1em;
+            }
+
+            .countdown-number {
+                font-size: 10em;
+            }
+
+            .timer-display {
+                font-size: 2.5em;
+                margin-bottom: 15px;
+            }
+
+            .word-display {
+                font-size: 2.2em;
+                padding: 35px 25px;
+                min-height: 120px;
+                letter-spacing: 2px;
+            }
+
+            .goal-indicator {
+                font-size: 0.95em;
+                padding: 8px 15px;
+            }
+
+            .recording-indicator {
+                font-size: 1em;
+            }
+
+            .recording-dot {
+                width: 14px;
+                height: 14px;
+            }
+
+            .stats {
+                gap: 8px;
+            }
+
+            .stat-card {
+                padding: 10px 8px;
+            }
+
+            .stat-value {
+                font-size: 1.8em;
+            }
+
+            .stat-label {
+                font-size: 0.75em;
+            }
+
+            .final-score {
+                font-size: 3em;
+            }
+
+            .ranking-title {
+                font-size: 1.4em;
+                margin: 20px 0 15px 0;
+            }
+
+            .ranking-item {
+                padding: 10px 12px;
+            }
+
+            .ranking-position {
+                font-size: 1.2em;
+                min-width: 35px;
+            }
+
+            .ranking-name {
+                font-size: 0.95em;
+                margin-left: 10px;
+            }
+
+            .ranking-score {
+                font-size: 1em;
+            }
+
+            .btn-restart {
+                padding: 12px 30px;
+                font-size: 1em;
+            }
+
+            .footer {
+                padding: 10px 15px;
+                font-size: 0.7em;
+            }
+        }
+
+        /* Smartphones */
+        @media screen and (max-width: 480px) {
+            body {
+                padding: 5px;
+                align-items: flex-start;
+                padding-top: 10px;
+            }
+
+            .container {
+                padding: 20px 15px;
+                border-radius: 12px;
+                margin-bottom: 85px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+                margin-bottom: 5px;
+            }
+
+            .video-header {
+                max-width: 120px;
+                border-width: 2px;
+                border-radius: 8px;
+                margin-bottom: 8px;
+            }
+
+            .start-btn {
+                width: 140px;
+                height: 140px;
+                font-size: 1.2em;
+                letter-spacing: 1px;
+            }
+
+            .start-btn::before {
+                font-size: 1.4em;
+                top: 12px;
+            }
+
+            .start-btn span {
+                top: 22px;
+            }
+
+            .register-screen {
+                gap: 18px;
+            }
+
+            .register-screen input {
+                padding: 10px 15px;
+                font-size: 0.95em;
+                border-width: 2px;
+            }
+
+            .register-screen p {
+                font-size: 0.9em !important;
+            }
+
+            .countdown-number {
+                font-size: 7em;
+            }
+
+            .timer-display {
+                font-size: 2em;
+                margin-bottom: 10px;
+            }
+
+            .word-display {
+                font-size: 1.6em;
+                padding: 25px 15px;
+                min-height: 90px;
+                letter-spacing: 1px;
+                border-radius: 10px;
+                margin-bottom: 12px;
+            }
+
+            .word-timer-bar {
+                height: 6px;
+                margin-bottom: 10px;
+            }
+
+            .goal-indicator {
+                font-size: 0.85em;
+                padding: 6px 12px;
+                margin-bottom: 10px;
+            }
+
+            .recording-indicator {
+                font-size: 0.85em;
+                gap: 6px;
+                margin-bottom: 10px;
+            }
+
+            .recording-dot {
+                width: 12px;
+                height: 12px;
+            }
+
+            .result {
+                padding: 8px;
+                font-size: 0.95em;
+                margin-bottom: 10px;
+            }
+
+            .stats {
+                gap: 6px;
+                margin-top: 10px;
+            }
+
+            .stat-card {
+                padding: 8px 5px;
+                border-radius: 8px;
+            }
+
+            .stat-value {
+                font-size: 1.5em;
+            }
+
+            .stat-label {
+                font-size: 0.65em;
+                margin-top: 3px;
+            }
+
+            .user-greeting {
+                font-size: 1em;
+                margin-bottom: 8px;
+            }
+
+            .final-score {
+                font-size: 2.5em;
+                margin: 15px 0;
+            }
+
+            .time-display {
+                font-size: 1.2em;
+            }
+
+            .ranking-title {
+                font-size: 1.2em;
+                margin: 15px 0 10px 0;
+            }
+
+            .ranking-list {
+                max-height: 200px;
+            }
+
+            .ranking-item {
+                padding: 8px 10px;
+                margin: 6px 0;
+                border-radius: 8px;
+            }
+
+            .ranking-position {
+                font-size: 1em;
+                min-width: 30px;
+            }
+
+            .ranking-name {
+                font-size: 0.85em;
+                margin-left: 8px;
+            }
+
+            .ranking-info {
+                min-width: 60px;
+            }
+
+            .ranking-score {
+                font-size: 0.9em;
+            }
+
+            .ranking-time {
+                font-size: 0.7em;
+            }
+
+            .btn-restart {
+                padding: 10px 25px;
+                font-size: 0.95em;
+                margin-top: 15px;
+            }
+
+            .footer {
+                padding: 8px 10px;
+                font-size: 0.6em;
+            }
+
+            .footer p {
+                margin: 1px 0;
+            }
+
+            .reset-btn {
+                font-size: 0.6em;
+                padding: 3px 8px;
+            }
+
+            .modal-content {
+                padding: 20px 15px;
+                max-width: 300px;
+            }
+
+            .modal-content h3 {
+                font-size: 1.1em;
+                margin-bottom: 15px;
+            }
+
+            .modal-content input {
+                padding: 10px;
+                font-size: 0.9em;
+            }
+
+            .modal-btn {
+                padding: 8px 18px;
+                font-size: 0.85em;
+            }
+        }
+
+        /* Smartphones muito pequenos */
+        @media screen and (max-width: 360px) {
+            h1 {
+                font-size: 1.3em;
+            }
+
+            .video-header {
+                max-width: 100px;
+            }
+
+            .start-btn {
+                width: 120px;
+                height: 120px;
+                font-size: 1em;
+            }
+
+            .start-btn::before {
+                font-size: 1.2em;
+                top: 10px;
+            }
+
+            .start-btn span {
+                top: 18px;
+            }
+
+            .countdown-number {
+                font-size: 5em;
+            }
+
+            .timer-display {
+                font-size: 1.7em;
+            }
+
+            .word-display {
+                font-size: 1.3em;
+                padding: 20px 10px;
+                min-height: 75px;
+            }
+
+            .stats {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .stat-value {
+                font-size: 1.3em;
+            }
+
+            .stat-label {
+                font-size: 0.55em;
+            }
+
+            .final-score {
+                font-size: 2em;
+            }
+
+            .ranking-list {
+                max-height: 150px;
+            }
+        }
+
+        /* Telas grandes e desktops */
+        @media screen and (min-width: 1200px) {
+            .container {
+                max-width: 1000px;
+                padding: 50px;
+            }
+
+            h1 {
+                font-size: 3em;
+            }
+
+            .video-header {
+                max-width: 200px;
+            }
+
+            .word-display {
+                font-size: 4em;
+                padding: 60px 50px;
+            }
+
+            .timer-display {
+                font-size: 4em;
+            }
+
+            .stat-value {
+                font-size: 2.5em;
+            }
+        }
+
+        /* Modo paisagem em dispositivos móveis */
+        @media screen and (max-height: 500px) and (orientation: landscape) {
+            body {
+                align-items: flex-start;
+                padding: 5px;
+            }
+
+            .container {
+                padding: 15px 20px;
+                margin-bottom: 70px;
+            }
+
+            h1 {
+                font-size: 1.3em;
+                margin-bottom: 5px;
+            }
+
+            .video-header {
+                max-width: 80px;
+                margin-bottom: 5px;
+            }
+
+            .start-btn {
+                width: 100px;
+                height: 100px;
+                font-size: 0.9em;
+            }
+
+            .start-btn::before {
+                font-size: 1em;
+                top: 8px;
+            }
+
+            .start-btn span {
+                top: 15px;
+            }
+
+            .register-screen {
+                gap: 10px;
+            }
+
+            .countdown-number {
+                font-size: 5em;
+            }
+
+            .timer-display {
+                font-size: 1.8em;
+                margin-bottom: 5px;
+            }
+
+            .word-display {
+                font-size: 1.5em;
+                padding: 15px 10px;
+                min-height: 60px;
+                margin-bottom: 8px;
+            }
+
+            .goal-indicator {
+                font-size: 0.75em;
+                padding: 4px 10px;
+                margin-bottom: 5px;
+            }
+
+            .recording-indicator {
+                font-size: 0.7em;
+                margin-bottom: 5px;
+            }
+
+            .stats {
+                gap: 5px;
+                margin-top: 8px;
+            }
+
+            .stat-card {
+                padding: 5px;
+            }
+
+            .stat-value {
+                font-size: 1.2em;
+            }
+
+            .stat-label {
+                font-size: 0.55em;
+            }
+
+            .footer {
+                padding: 5px 10px;
+                font-size: 0.55em;
+            }
+
+            .ranking-list {
+                max-height: 100px;
+            }
+        }
     </style>
 </head>
 <body>
