@@ -1327,50 +1327,81 @@
             recognition.lang = 'pt-BR';
             recognition.continuous = true;
             recognition.interimResults = true;
-            recognition.maxAlternatives = 5;
+            recognition.maxAlternatives = 10; // Mais alternativas para melhor precisão
 
             recognition.onresult = (event) => {
                 if (!isGameRunning || wordAnswered) return;
                 
-                let finalTranscript = '';
-                let interimTranscript = '';
+                let bestTranscript = '';
+                let bestSimilarity = 0;
+                let isFinalResult = false;
                 
                 // Procurar por resultados
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     const result = event.results[i];
-                    const transcript = result[0].transcript.toLowerCase().trim();
+                    
+                    // Verificar TODAS as alternativas do reconhecimento
+                    for (let j = 0; j < result.length; j++) {
+                        const transcript = result[j].transcript.toLowerCase().trim();
+                        
+                        // Extrair palavras individuais do transcript
+                        const words = transcript.split(/\s+/);
+                        
+                        for (const word of words) {
+                            if (word.length < 2) continue;
+                            
+                            const similarity = calculateSimilarity(
+                                normalizeText(currentWord), 
+                                normalizeText(word)
+                            );
+                            
+                            if (similarity > bestSimilarity) {
+                                bestSimilarity = similarity;
+                                bestTranscript = word;
+                            }
+                        }
+                        
+                        // Também verificar o transcript completo
+                        const fullSimilarity = calculateSimilarity(
+                            normalizeText(currentWord), 
+                            normalizeText(transcript)
+                        );
+                        
+                        if (fullSimilarity > bestSimilarity) {
+                            bestSimilarity = fullSimilarity;
+                            bestTranscript = transcript;
+                        }
+                    }
                     
                     if (result.isFinal) {
-                        finalTranscript = transcript;
-                    } else {
-                        interimTranscript = transcript;
+                        isFinalResult = true;
                     }
                 }
                 
                 // Mostrar o que está sendo detectado em tempo real
-                if (interimTranscript) {
-                    showInterimResult(interimTranscript);
+                if (bestTranscript && !isFinalResult) {
+                    showInterimResult(bestTranscript, bestSimilarity);
                 }
                 
-                // Se temos um resultado final, processar
-                if (finalTranscript) {
-                    console.log('Resultado final:', finalTranscript);
+                // Se temos um resultado final OU uma correspondência muito boa (>=60%), processar
+                if (bestTranscript && (isFinalResult || bestSimilarity >= 60)) {
+                    console.log('Processando:', bestTranscript, 'Similaridade:', bestSimilarity);
                     wordAnswered = true;
                     clearWordTimer();
-                    checkWord(finalTranscript);
+                    checkWord(bestTranscript);
                 }
             };
 
             recognition.onerror = (event) => {
                 console.log('Erro reconhecimento:', event.error);
-                if (event.error === 'no-speech' || event.error === 'audio-capture') {
+                if (event.error === 'no-speech' || event.error === 'audio-capture' || event.error === 'network') {
                     // Tentar reiniciar
                     if (isGameRunning && !wordAnswered) {
                         setTimeout(() => {
                             if (isGameRunning && !wordAnswered) {
                                 restartRecognition();
                             }
-                        }, 300);
+                        }, 200);
                     }
                 }
             };
@@ -1666,14 +1697,14 @@
             const expected = normalizeText(currentWord);
             const spoken = normalizeText(spokenWord);
             const similarity = calculateSimilarity(expected, spoken);
-            const isCorrect = similarity >= 70; // 70% de similaridade
+            const isCorrect = similarity >= 60; // 60% de similaridade (mais tolerante)
             
             if (isCorrect) {
                 stats.correct++;
-                showResult(`✅ "${spokenWord}"`, 'success');
+                showResult(`✅ "${spokenWord}" (${similarity}%)`, 'success');
             } else {
                 stats.incorrect++;
-                showResult(`❌ "${spokenWord}" (${similarity}%)`, 'error');
+                showResult(`❌ "${spokenWord}" (${similarity}%) - Esperado: ${currentWord}`, 'error');
             }
 
             stats.total++;
@@ -1684,7 +1715,7 @@
                 if (isGameRunning) {
                     getNextWord();
                 }
-            }, 400);
+            }, 600); // Mais tempo para ver o resultado
         }
 
         function showResult(message, type) {
@@ -1694,10 +1725,11 @@
             resultDiv.classList.remove('hidden');
         }
         
-        function showInterimResult(transcript) {
+        function showInterimResult(transcript, similarity) {
             const resultDiv = document.getElementById('result');
             resultDiv.className = 'result interim';
-            resultDiv.innerHTML = `🎤 "${transcript}"...`;
+            const simText = similarity ? ` (${similarity}%)` : '';
+            resultDiv.innerHTML = `🎙️ "${transcript}"${simText}...`;
             resultDiv.classList.remove('hidden');
         }
 
