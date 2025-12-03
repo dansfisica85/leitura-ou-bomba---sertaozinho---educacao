@@ -288,6 +288,18 @@
             color: #922b21;
             border: 2px solid #e74c3c;
         }
+        
+        .result.interim {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffc107;
+            animation: pulse 0.5s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            from { opacity: 0.7; }
+            to { opacity: 1; }
+        }
 
         .stats {
             display: grid;
@@ -1320,30 +1332,32 @@
             recognition.onresult = (event) => {
                 if (!isGameRunning || wordAnswered) return;
                 
-                // Procurar por resultado final
+                let finalTranscript = '';
+                let interimTranscript = '';
+                
+                // Procurar por resultados
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     const result = event.results[i];
+                    const transcript = result[0].transcript.toLowerCase().trim();
+                    
                     if (result.isFinal) {
-                        // Verificar todas as alternativas
-                        let bestMatch = '';
-                        let bestSimilarity = 0;
-                        
-                        for (let j = 0; j < result.length; j++) {
-                            const transcript = result[j].transcript.toLowerCase().trim();
-                            const similarity = calculateSimilarity(normalizeText(currentWord), normalizeText(transcript));
-                            if (similarity > bestSimilarity) {
-                                bestSimilarity = similarity;
-                                bestMatch = transcript;
-                            }
-                        }
-                        
-                        if (bestMatch) {
-                            wordAnswered = true;
-                            clearWordTimer();
-                            checkWord(bestMatch);
-                            return;
-                        }
+                        finalTranscript = transcript;
+                    } else {
+                        interimTranscript = transcript;
                     }
+                }
+                
+                // Mostrar o que está sendo detectado em tempo real
+                if (interimTranscript) {
+                    showInterimResult(interimTranscript);
+                }
+                
+                // Se temos um resultado final, processar
+                if (finalTranscript) {
+                    console.log('Resultado final:', finalTranscript);
+                    wordAnswered = true;
+                    clearWordTimer();
+                    checkWord(finalTranscript);
                 }
             };
 
@@ -1677,6 +1691,13 @@
             const resultDiv = document.getElementById('result');
             resultDiv.className = `result ${type}`;
             resultDiv.innerHTML = message;
+            resultDiv.classList.remove('hidden');
+        }
+        
+        function showInterimResult(transcript) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result interim';
+            resultDiv.innerHTML = `🎤 "${transcript}"...`;
             resultDiv.classList.remove('hidden');
         }
 
