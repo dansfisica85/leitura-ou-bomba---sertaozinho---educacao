@@ -42,38 +42,32 @@
             text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
 
-        /* Vídeo de fundo */
-        .video-background {
-            position: fixed;
-            top: 0;
-            left: 0;
+        /* Vídeo no cabeçalho */
+        .video-header {
             width: 100%;
-            height: 100%;
-            z-index: 1;
+            max-width: 400px;
+            margin: 0 auto 20px auto;
+            border-radius: 15px;
             overflow: hidden;
+            box-shadow: 0 10px 30px rgba(231, 76, 60, 0.4);
+            border: 4px solid #e74c3c;
         }
 
-        .video-background video {
-            min-width: 100%;
-            min-height: 100%;
-            width: auto;
+        .video-header video {
+            width: 100%;
             height: auto;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            object-fit: cover;
+            display: block;
         }
 
-        /* Overlay para explosão */
+        /* Overlay para explosão em tela cheia */
         .explosion-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            z-index: 1000;
+            background: #000;
+            z-index: 2000;
             display: none;
             justify-content: center;
             align-items: center;
@@ -84,8 +78,9 @@
         }
 
         .explosion-overlay video {
-            max-width: 100%;
-            max-height: 100%;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
 
         /* Tela de Cadastro */
@@ -591,14 +586,7 @@
     </style>
 </head>
 <body>
-    <!-- Vídeo de fundo (bomba em loop) -->
-    <div id="videoBackground" class="video-background hidden">
-        <video id="bgVideo" muted playsinline>
-            <source src="bomba1.mp4" type="video/mp4">
-        </video>
-    </div>
-
-    <!-- Overlay para explosão -->
+    <!-- Overlay para explosão em tela cheia -->
     <div id="explosionOverlay" class="explosion-overlay">
         <video id="explosionVideo" playsinline>
             <source src="bomba2.mp4" type="video/mp4">
@@ -607,6 +595,13 @@
 
     <div class="container">
         <h1>💣 Leitura ou Bomba</h1>
+        
+        <!-- Vídeo da bomba no cabeçalho -->
+        <div id="videoHeader" class="video-header hidden">
+            <video id="bgVideo" muted playsinline loop>
+                <source src="bomba1.mp4" type="video/mp4">
+            </video>
+        </div>
 
         <!-- Tela de Cadastro -->
         <div id="registerScreen" class="register-screen">
@@ -769,7 +764,7 @@
         // ===== ELEMENTOS =====
         const bgVideo = document.getElementById('bgVideo');
         const explosionVideo = document.getElementById('explosionVideo');
-        const videoBackground = document.getElementById('videoBackground');
+        const videoHeader = document.getElementById('videoHeader');
         const explosionOverlay = document.getElementById('explosionOverlay');
 
         // ===== INICIALIZAÇÃO =====
@@ -885,8 +880,8 @@
             isGameRunning = true;
             gameStartTime = Date.now();
 
-            // Iniciar vídeo de fundo
-            videoBackground.classList.remove('hidden');
+            // Iniciar vídeo no cabeçalho
+            videoHeader.classList.remove('hidden');
             bgVideo.currentTime = 0;
             bgVideo.loop = true;
             bgVideo.play().catch(e => console.log('Erro ao reproduzir vídeo:', e));
@@ -1131,17 +1126,17 @@
             clearWordTimer();
             stopRecognition();
             
-            // Parar vídeo de fundo
+            // Parar vídeo do cabeçalho
             bgVideo.pause();
-            videoBackground.classList.add('hidden');
+            videoHeader.classList.add('hidden');
 
             const timeUsed = Math.round((gameEndTime - gameStartTime) / 1000);
             const success = stats.correct >= GOAL_WORDS;
 
             if (!success) {
-                // Mostrar explosão
+                // Mostrar explosão em tela cheia a partir dos 8 segundos
                 explosionOverlay.classList.add('active');
-                explosionVideo.currentTime = 0;
+                explosionVideo.currentTime = 8; // Começar a partir dos 8 segundos
                 explosionVideo.play().catch(e => console.log('Erro vídeo explosão:', e));
                 
                 explosionVideo.onended = () => {
@@ -1149,13 +1144,13 @@
                     showResults(timeUsed, success);
                 };
                 
-                // Fallback se o vídeo não carregar
+                // Fallback se o vídeo não carregar (tempo maior para vídeo completo)
                 setTimeout(() => {
                     if (explosionOverlay.classList.contains('active')) {
                         explosionOverlay.classList.remove('active');
                         showResults(timeUsed, success);
                     }
-                }, 5000);
+                }, 30000); // 30 segundos de fallback para vídeo completo
             } else {
                 showResults(timeUsed, success);
             }
