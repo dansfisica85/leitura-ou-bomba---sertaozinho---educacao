@@ -1304,63 +1304,97 @@
         });
 
         // Inicializar Web Speech API
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        function initSpeechRecognition() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('Seu navegador não suporta reconhecimento de voz. Use Chrome ou Edge.');
+                return false;
+            }
+            
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
             recognition.lang = 'pt-BR';
-            recognition.continuous = false; // Mudado para false para detectar fim de fala
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 3;
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.maxAlternatives = 5;
 
             recognition.onresult = (event) => {
                 if (!isGameRunning || wordAnswered) return;
                 
-                const result = event.results[0];
-                if (result.isFinal) {
-                    const transcript = result[0].transcript.toLowerCase().trim();
-                    if (transcript) {
-                        wordAnswered = true;
-                        clearWordTimer();
-                        checkWord(transcript);
-                    }
-                }
-            };
-
-            recognition.onspeechend = () => {
-                // Fala terminou, processar se ainda não foi respondido
-                if (isGameRunning && !wordAnswered) {
-                    // Dar um pequeno delay para processar o resultado
-                    setTimeout(() => {
-                        if (!wordAnswered && isGameRunning) {
-                            startRecognitionForWord();
+                // Procurar por resultado final
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const result = event.results[i];
+                    if (result.isFinal) {
+                        // Verificar todas as alternativas
+                        let bestMatch = '';
+                        let bestSimilarity = 0;
+                        
+                        for (let j = 0; j < result.length; j++) {
+                            const transcript = result[j].transcript.toLowerCase().trim();
+                            const similarity = calculateSimilarity(normalizeText(currentWord), normalizeText(transcript));
+                            if (similarity > bestSimilarity) {
+                                bestSimilarity = similarity;
+                                bestMatch = transcript;
+                            }
                         }
-                    }, 200);
+                        
+                        if (bestMatch) {
+                            wordAnswered = true;
+                            clearWordTimer();
+                            checkWord(bestMatch);
+                            return;
+                        }
+                    }
                 }
             };
 
             recognition.onerror = (event) => {
                 console.log('Erro reconhecimento:', event.error);
-                if (isGameRunning && !wordAnswered && event.error !== 'aborted') {
-                    setTimeout(() => {
-                        if (isGameRunning && !wordAnswered) {
-                            startRecognitionForWord();
-                        }
-                    }, 100);
+                if (event.error === 'no-speech' || event.error === 'audio-capture') {
+                    // Tentar reiniciar
+                    if (isGameRunning && !wordAnswered) {
+                        setTimeout(() => {
+                            if (isGameRunning && !wordAnswered) {
+                                restartRecognition();
+                            }
+                        }, 300);
+                    }
                 }
             };
 
             recognition.onend = () => {
+                // Reiniciar automaticamente se o jogo ainda está rodando
                 if (isGameRunning && !wordAnswered) {
                     setTimeout(() => {
                         if (isGameRunning && !wordAnswered) {
-                            startRecognitionForWord();
+                            restartRecognition();
                         }
                     }, 100);
                 }
             };
-        } else {
-            alert('Seu navegador não suporta reconhecimento de voz. Use Chrome ou Edge.');
+            
+            return true;
         }
+        
+        function restartRecognition() {
+            if (!recognition || !isGameRunning) return;
+            try {
+                recognition.stop();
+            } catch(e) {}
+            
+            setTimeout(() => {
+                if (isGameRunning && !wordAnswered) {
+                    try {
+                        recognition.start();
+                        console.log('Reconhecimento reiniciado');
+                    } catch(e) {
+                        console.log('Erro ao reiniciar:', e);
+                    }
+                }
+            }, 100);
+        }
+        
+        // Inicializar reconhecimento de voz
+        initSpeechRecognition();
 
         // ===== FUNÇÕES =====
         function startCountdown() {
