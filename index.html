@@ -1362,10 +1362,11 @@
             };
 
             recognition.onend = () => {
-                // Reiniciar automaticamente se o jogo ainda está rodando
-                if (isGameRunning && !wordAnswered) {
+                console.log('Reconhecimento terminou, restarting:', recognitionRestarting);
+                // Reiniciar automaticamente se o jogo ainda está rodando e não foi parado intencionalmente
+                if (isGameRunning && !wordAnswered && !recognitionRestarting) {
                     setTimeout(() => {
-                        if (isGameRunning && !wordAnswered) {
+                        if (isGameRunning && !wordAnswered && !recognitionRestarting) {
                             restartRecognition();
                         }
                     }, 100);
@@ -1376,13 +1377,13 @@
         }
         
         function restartRecognition() {
-            if (!recognition || !isGameRunning) return;
+            if (!recognition || !isGameRunning || recognitionRestarting) return;
             try {
                 recognition.stop();
             } catch(e) {}
             
             setTimeout(() => {
-                if (isGameRunning && !wordAnswered) {
+                if (isGameRunning && !wordAnswered && !recognitionRestarting) {
                     try {
                         recognition.start();
                         console.log('Reconhecimento reiniciado');
@@ -1466,8 +1467,8 @@
         function startRecognitionForWord() {
             if (!recognition || !isGameRunning) return;
             
-            // Se já está rodando, não faz nada
-            if (recognitionRestarting) return;
+            // Resetar flag para permitir novo reconhecimento
+            recognitionRestarting = false;
             
             try {
                 recognition.start();
