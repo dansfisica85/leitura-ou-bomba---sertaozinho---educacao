@@ -4,13 +4,13 @@ Aplicação web de reconhecimento de voz para teste de leitura com palavras reai
 
 ## 👨‍🏫 Autor
 
-**Profº Davi Antonino Nunes da Silva**
+### Profº Davi Antonino Nunes da Silva
 
 - 📞 Contato: (16) 99260-4315
-- 📧 E-mail: davi.silva@educacao.sp.gov.br
-- 📧 E-mail alternativo: professordavi85@gmail.com
+- 📧 E-mail: <davi.silva@educacao.sp.gov.br>
+- 📧 E-mail alternativo: <professordavi85@gmail.com>
 
-**Para uso gratuito da Secretaria de Educação do Município de Sertãozinho**
+**Uso gratuito — exclusivo para a Secretaria de Educação do Município de Sertãozinho**
 
 ---
 
@@ -78,6 +78,7 @@ Para que o ranking seja persistido no repositório do GitHub:
 ## 🔐 Área Administrativa
 
 Para resetar o ranking:
+
 1. Clique no botão "⚙️ Admin" discreto no rodapé
 2. Digite a senha de administrador
 3. Confirme para limpar todo o ranking
