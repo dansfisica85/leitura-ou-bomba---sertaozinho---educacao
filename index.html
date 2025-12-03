@@ -1438,6 +1438,7 @@
             timeRemaining = GAME_TIME;
             isGameRunning = true;
             gameStartTime = Date.now();
+            recognitionRestarting = false; // Resetar flag para novo jogo
 
             // Iniciar vídeo no cabeçalho
             videoHeader.classList.remove('hidden');
@@ -1464,17 +1465,25 @@
 
         function startRecognitionForWord() {
             if (!recognition || !isGameRunning) return;
+            
+            // Se já está rodando, não faz nada
+            if (recognitionRestarting) return;
+            
             try {
                 recognition.start();
+                console.log('Reconhecimento iniciado');
             } catch(e) {
-                // Já está rodando
+                // Já está rodando, ok
+                console.log('Reconhecimento já está ativo');
             }
         }
 
         function stopRecognition() {
             if (!recognition) return;
+            recognitionRestarting = true; // Impede restart automático
             try {
-                recognition.abort();
+                recognition.stop();
+                console.log('Reconhecimento parado');
             } catch(e) {}
         }
 
