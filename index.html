@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Leitura ou Bomba</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💣</text></svg>">
     <style>
         * {
             margin: 0;
@@ -14,7 +14,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -23,26 +23,69 @@
         }
 
         .container {
-            background: white;
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
             padding: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 800px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            max-width: 900px;
             width: 100%;
             text-align: center;
+            position: relative;
+            z-index: 10;
         }
 
         h1 {
-            color: #667eea;
+            color: #e74c3c;
             text-align: center;
             margin-bottom: 10px;
             font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
 
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
+        /* Vídeo de fundo */
+        .video-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .video-background video {
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+        }
+
+        /* Overlay para explosão */
+        .explosion-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .explosion-overlay.active {
+            display: flex;
+        }
+
+        .explosion-overlay video {
+            max-width: 100%;
+            max-height: 100%;
         }
 
         /* Tela de Cadastro */
@@ -56,7 +99,7 @@
         .register-screen input {
             padding: 15px 25px;
             font-size: 1.2em;
-            border: 2px solid #667eea;
+            border: 3px solid #e74c3c;
             border-radius: 10px;
             width: 100%;
             max-width: 400px;
@@ -66,34 +109,50 @@
         }
 
         .register-screen input:focus {
-            border-color: #764ba2;
-            box-shadow: 0 0 10px rgba(102, 126, 234, 0.3);
+            border-color: #c0392b;
+            box-shadow: 0 0 15px rgba(231, 76, 60, 0.4);
         }
 
-        /* Botão INICIAR grande e redondo */
+        /* Botão INICIAR */
         .start-btn {
             width: 200px;
             height: 200px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
             border: none;
             color: white;
             font-size: 1.8em;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
-            box-shadow: 0 10px 30px rgba(72, 187, 120, 0.4);
+            box-shadow: 0 10px 30px rgba(231, 76, 60, 0.5);
             text-transform: uppercase;
             letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .start-btn:hover {
+        .start-btn::before {
+            content: '💣';
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 2em;
+        }
+
+        .start-btn span {
+            position: relative;
+            top: 30px;
+        }
+
+        .start-btn:hover:not(:disabled) {
             transform: scale(1.05);
-            box-shadow: 0 15px 40px rgba(72, 187, 120, 0.5);
+            box-shadow: 0 15px 40px rgba(231, 76, 60, 0.6);
         }
 
         .start-btn:disabled {
-            background: #ccc;
+            background: #bdc3c7;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
@@ -106,7 +165,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(0, 0, 0, 0.9);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -115,9 +174,10 @@
 
         .countdown-number {
             font-size: 15em;
-            color: white;
+            color: #e74c3c;
             font-weight: bold;
             animation: countdownPulse 1s ease-in-out;
+            text-shadow: 0 0 50px rgba(231, 76, 60, 0.8);
         }
 
         @keyframes countdownPulse {
@@ -130,17 +190,17 @@
         .timer-display {
             font-size: 3.5em;
             font-weight: bold;
-            color: #667eea;
+            color: #e74c3c;
             margin-bottom: 20px;
             font-family: 'Courier New', monospace;
         }
 
         .timer-display.warning {
-            color: #ed8936;
+            color: #f39c12;
         }
 
         .timer-display.danger {
-            color: #f56565;
+            color: #c0392b;
             animation: blink 0.5s infinite;
         }
 
@@ -149,26 +209,44 @@
             50% { opacity: 0.5; }
         }
 
+        /* Barra de progresso da palavra (3 segundos) */
+        .word-timer-bar {
+            width: 100%;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .word-timer-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #f39c12, #e74c3c);
+            width: 100%;
+            transition: width 0.1s linear;
+        }
+
         /* Área do Jogo */
         .game-screen {
             display: none;
         }
 
         .word-display {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
             color: white;
-            padding: 60px 40px;
+            padding: 50px 40px;
             border-radius: 15px;
             text-align: center;
             font-size: 3.5em;
             font-weight: bold;
-            margin-bottom: 30px;
-            min-height: 180px;
+            margin-bottom: 20px;
+            min-height: 160px;
             display: flex;
             align-items: center;
             justify-content: center;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
             text-transform: uppercase;
+            box-shadow: 0 10px 30px rgba(231, 76, 60, 0.4);
         }
 
         /* Indicador de Gravação */
@@ -177,74 +255,89 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            margin-bottom: 20px;
-            font-size: 1.3em;
-            color: #f56565;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            color: #e74c3c;
         }
 
         .recording-dot {
-            width: 20px;
-            height: 20px;
-            background: #f56565;
+            width: 18px;
+            height: 18px;
+            background: #e74c3c;
             border-radius: 50%;
             animation: pulse 1s infinite;
         }
 
         @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.2); }
+            50% { opacity: 0.5; transform: scale(1.3); }
         }
 
         .result {
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             text-align: center;
             font-size: 1.1em;
             font-weight: 600;
         }
 
         .result.success {
-            background: #c6f6d5;
-            color: #22543d;
-            border: 2px solid #48bb78;
+            background: #d5f4e6;
+            color: #1e8449;
+            border: 2px solid #27ae60;
         }
 
         .result.error {
-            background: #fed7d7;
-            color: #742a2a;
-            border: 2px solid #f56565;
+            background: #fadbd8;
+            color: #922b21;
+            border: 2px solid #e74c3c;
         }
 
         .stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-top: 20px;
+            gap: 12px;
+            margin-top: 15px;
         }
 
         .stat-card {
-            background: #f7fafc;
-            padding: 15px;
+            background: #f8f9fa;
+            padding: 12px;
             border-radius: 10px;
             text-align: center;
-            border: 2px solid #e2e8f0;
+            border: 2px solid #ecf0f1;
         }
 
         .stat-value {
-            font-size: 2.5em;
+            font-size: 2.2em;
             font-weight: bold;
-            color: #667eea;
+            color: #e74c3c;
         }
 
         .stat-label {
-            color: #666;
+            color: #7f8c8d;
             margin-top: 5px;
-            font-size: 0.9em;
+            font-size: 0.85em;
         }
 
         .hidden {
             display: none !important;
+        }
+
+        /* Meta de 30 palavras */
+        .goal-indicator {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            display: inline-block;
+        }
+
+        .goal-indicator.achieved {
+            background: linear-gradient(135deg, #27ae60, #1e8449);
         }
 
         /* Tela de Resultados */
@@ -254,14 +347,27 @@
 
         .final-score {
             font-size: 4em;
-            color: #48bb78;
             font-weight: bold;
             margin: 20px 0;
         }
 
+        .final-score.success {
+            color: #27ae60;
+        }
+
+        .final-score.fail {
+            color: #e74c3c;
+        }
+
+        .time-display {
+            font-size: 1.5em;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+
         .ranking-title {
             font-size: 1.8em;
-            color: #667eea;
+            color: #e74c3c;
             margin: 30px 0 20px 0;
         }
 
@@ -276,32 +382,32 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 15px 20px;
-            margin: 10px 0;
-            background: #f7fafc;
+            padding: 12px 15px;
+            margin: 8px 0;
+            background: #f8f9fa;
             border-radius: 10px;
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #e74c3c;
         }
 
         .ranking-item.gold {
-            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
-            border-left-color: #f6ad55;
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            border-left-color: #f39c12;
         }
 
         .ranking-item.silver {
-            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%);
-            border-left-color: #a0aec0;
+            background: linear-gradient(135deg, #dfe6e9 0%, #b2bec3 100%);
+            border-left-color: #95a5a6;
         }
 
         .ranking-item.bronze {
-            background: linear-gradient(135deg, #feebc8 0%, #f6ad55 100%);
-            border-left-color: #dd6b20;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            border-left-color: #e67e22;
         }
 
         .ranking-position {
-            font-size: 1.5em;
+            font-size: 1.4em;
             font-weight: bold;
-            color: #667eea;
+            color: #e74c3c;
             min-width: 40px;
         }
 
@@ -309,19 +415,28 @@
             flex: 1;
             text-align: left;
             margin-left: 15px;
-            font-size: 1.2em;
+            font-size: 1.1em;
+        }
+
+        .ranking-info {
+            text-align: right;
         }
 
         .ranking-score {
             font-weight: bold;
-            font-size: 1.3em;
-            color: #48bb78;
+            font-size: 1.2em;
+            color: #27ae60;
+        }
+
+        .ranking-time {
+            font-size: 0.85em;
+            color: #7f8c8d;
         }
 
         .btn-restart {
             padding: 15px 40px;
             font-size: 1.2em;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
             color: white;
             border: none;
             border-radius: 10px;
@@ -332,12 +447,12 @@
 
         .btn-restart:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
         }
 
         .user-greeting {
             font-size: 1.2em;
-            color: #666;
+            color: #7f8c8d;
             margin-bottom: 10px;
         }
 
@@ -347,47 +462,47 @@
             bottom: 0;
             left: 0;
             width: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 12px 20px;
             text-align: center;
-            font-size: 0.85em;
-            color: #666;
+            font-size: 0.8em;
+            color: #7f8c8d;
             box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
             z-index: 100;
         }
 
         .footer p {
-            margin: 3px 0;
+            margin: 2px 0;
         }
 
         .footer .author {
             font-weight: bold;
-            color: #667eea;
+            color: #e74c3c;
         }
 
         .footer .usage {
-            color: #48bb78;
+            color: #27ae60;
             font-weight: 600;
         }
 
         .container {
-            margin-bottom: 120px;
+            margin-bottom: 100px;
         }
 
         /* Botão de reset discreto */
         .reset-btn {
             background: transparent;
             border: none;
-            color: #ccc;
+            color: #bdc3c7;
             font-size: 0.7em;
             cursor: pointer;
             padding: 5px 10px;
-            margin-top: 5px;
+            margin-top: 3px;
             transition: color 0.3s;
         }
 
         .reset-btn:hover {
-            color: #999;
+            color: #7f8c8d;
         }
 
         /* Modal de senha */
@@ -398,8 +513,8 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1001;
             justify-content: center;
             align-items: center;
         }
@@ -419,14 +534,14 @@
         }
 
         .modal-content h3 {
-            color: #667eea;
+            color: #e74c3c;
             margin-bottom: 20px;
         }
 
         .modal-content input {
             width: 100%;
             padding: 12px;
-            border: 2px solid #e2e8f0;
+            border: 2px solid #ecf0f1;
             border-radius: 10px;
             font-size: 1em;
             margin-bottom: 15px;
@@ -435,7 +550,7 @@
 
         .modal-content input:focus {
             outline: none;
-            border-color: #667eea;
+            border-color: #e74c3c;
         }
 
         .modal-buttons {
@@ -458,17 +573,17 @@
         }
 
         .modal-btn.confirm {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
             color: white;
         }
 
         .modal-btn.cancel {
-            background: #e2e8f0;
-            color: #666;
+            background: #ecf0f1;
+            color: #7f8c8d;
         }
 
         .modal-error {
-            color: #e53e3e;
+            color: #e74c3c;
             font-size: 0.85em;
             margin-top: 10px;
             display: none;
@@ -476,16 +591,33 @@
     </style>
 </head>
 <body>
+    <!-- Vídeo de fundo (bomba em loop) -->
+    <div id="videoBackground" class="video-background hidden">
+        <video id="bgVideo" muted playsinline>
+            <source src="bomba1.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <!-- Overlay para explosão -->
+    <div id="explosionOverlay" class="explosion-overlay">
+        <video id="explosionVideo" playsinline>
+            <source src="bomba2.mp4" type="video/mp4">
+        </video>
+    </div>
+
     <div class="container">
-        <h1>🎯 Leitura ou Bomba</h1>
+        <h1>💣 Leitura ou Bomba</h1>
 
         <!-- Tela de Cadastro -->
         <div id="registerScreen" class="register-screen">
-            <p style="font-size: 1.2em; color: #666;">Digite seu nome para começar:</p>
+            <p style="font-size: 1.2em; color: #7f8c8d;">Digite seu nome para começar:</p>
             <input type="text" id="userName" placeholder="Seu nome" maxlength="30" autocomplete="off">
             <button id="startBtn" class="start-btn" onclick="startCountdown()" disabled>
-                INICIAR
+                <span>INICIAR</span>
             </button>
+            <p style="color: #e74c3c; font-size: 0.95em; margin-top: 10px;">
+                ⚠️ Acerte pelo menos <strong>30 palavras</strong> antes do tempo acabar!
+            </p>
         </div>
 
         <!-- Contagem Regressiva (overlay) -->
@@ -498,9 +630,17 @@
             <p id="userGreeting" class="user-greeting"></p>
             <div id="timerDisplay" class="timer-display">01:30</div>
             
+            <div id="goalIndicator" class="goal-indicator">
+                🎯 Meta: <span id="goalProgress">0</span>/30 palavras
+            </div>
+            
+            <div class="word-timer-bar">
+                <div id="wordTimerProgress" class="word-timer-progress"></div>
+            </div>
+            
             <div class="recording-indicator">
                 <div class="recording-dot"></div>
-                <span>Gravando...</span>
+                <span>Gravando... (3s por palavra)</span>
             </div>
 
             <div id="wordDisplay" class="word-display">
@@ -527,12 +667,13 @@
 
         <!-- Tela de Resultados -->
         <div id="resultsScreen" class="results-screen">
-            <h2 style="color: #667eea;">⏰ Tempo Esgotado!</h2>
-            <p id="finalUserName" style="font-size: 1.3em; color: #666; margin-top: 10px;"></p>
+            <h2 id="resultTitle" style="color: #e74c3c;">⏰ Tempo Esgotado!</h2>
+            <p id="finalUserName" style="font-size: 1.3em; color: #7f8c8d; margin-top: 10px;"></p>
             <div class="final-score" id="finalScore">0</div>
-            <p style="color: #666;">palavras corretas</p>
+            <p style="color: #7f8c8d;">palavras corretas</p>
+            <p class="time-display" id="finalTime"></p>
 
-            <h3 class="ranking-title">🏆 Ranking</h3>
+            <h3 class="ranking-title">🏆 Ranking - Top 10</h3>
             <ul id="rankingList" class="ranking-list"></ul>
 
             <button class="btn-restart" onclick="restartGame()">🔄 Jogar Novamente</button>
@@ -543,7 +684,7 @@
     <div id="resetModal" class="modal-overlay">
         <div class="modal-content">
             <h3>🔐 Área Restrita</h3>
-            <p style="color: #666; margin-bottom: 15px;">Digite a senha para resetar o ranking:</p>
+            <p style="color: #7f8c8d; margin-bottom: 15px;">Digite a senha para resetar o ranking:</p>
             <input type="password" id="resetPassword" placeholder="Senha" autocomplete="off">
             <div class="modal-buttons">
                 <button class="modal-btn cancel" onclick="closeResetModal()">Cancelar</button>
@@ -556,14 +697,19 @@
     <!-- Rodapé -->
     <footer class="footer">
         <p class="author">Profº Davi Antonino Nunes da Silva</p>
-        <p>📞 Contato: (16) 99260-4315</p>
-        <p>📧 davi.silva@educacao.sp.gov.br | professordavi85@gmail.com</p>
+        <p>📞 (16) 99260-4315 | 📧 davi.silva@educacao.sp.gov.br</p>
         <p class="usage">Para uso gratuito da Secretaria de Educação do Município de Sertãozinho</p>
         <button class="reset-btn" onclick="openResetModal()" title="Área administrativa">⚙️ Admin</button>
     </footer>
 
     <script>
-        // ===== PALAVRAS DOS ARQUIVOS CSV =====
+        // ===== CONFIGURAÇÕES =====
+        const WORD_TIME = 3000; // 3 segundos por palavra
+        const GOAL_WORDS = 30; // Meta de palavras para não explodir
+        const GAME_TIME = 90; // 1:30 em segundos
+        const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+        // ===== PALAVRAS =====
         const palavrasReais = [
             "bala", "búfalo", "faca", "batata", "bula", "dourado", "fala",
             "baú", "buzina", "doçura", "fada", "banana", "buda", "dúvida", "favela",
@@ -600,7 +746,6 @@
             "plimoca", "drofila", "cranteba", "flosiga", "tremulo", "vaspino", "bruleca"
         ];
 
-        // Remover duplicatas
         const uniqueReais = [...new Set(palavrasReais)];
         const uniquePseudo = [...new Set(pseudoPalavras)];
 
@@ -611,9 +756,21 @@
         let usedPseudoWords = [];
         let recognition = null;
         let timerInterval = null;
-        let timeRemaining = 90;
+        let wordTimerInterval = null;
+        let timeRemaining = GAME_TIME;
+        let wordTimeRemaining = WORD_TIME;
         let userName = '';
         let stats = { correct: 0, incorrect: 0, total: 0 };
+        let gameStartTime = null;
+        let gameEndTime = null;
+        let wordAnswered = false;
+        let isGameRunning = false;
+
+        // ===== ELEMENTOS =====
+        const bgVideo = document.getElementById('bgVideo');
+        const explosionVideo = document.getElementById('explosionVideo');
+        const videoBackground = document.getElementById('videoBackground');
+        const explosionOverlay = document.getElementById('explosionOverlay');
 
         // ===== INICIALIZAÇÃO =====
         document.getElementById('userName').addEventListener('input', function() {
@@ -631,29 +788,54 @@
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             recognition = new SpeechRecognition();
             recognition.lang = 'pt-BR';
-            recognition.continuous = true;
+            recognition.continuous = false; // Mudado para false para detectar fim de fala
             recognition.interimResults = false;
+            recognition.maxAlternatives = 3;
 
             recognition.onresult = (event) => {
-                const lastResult = event.results[event.results.length - 1];
-                if (lastResult.isFinal) {
-                    const transcript = lastResult[0].transcript.toLowerCase().trim();
-                    checkWord(transcript);
+                if (!isGameRunning || wordAnswered) return;
+                
+                const result = event.results[0];
+                if (result.isFinal) {
+                    const transcript = result[0].transcript.toLowerCase().trim();
+                    if (transcript) {
+                        wordAnswered = true;
+                        clearWordTimer();
+                        checkWord(transcript);
+                    }
+                }
+            };
+
+            recognition.onspeechend = () => {
+                // Fala terminou, processar se ainda não foi respondido
+                if (isGameRunning && !wordAnswered) {
+                    // Dar um pequeno delay para processar o resultado
+                    setTimeout(() => {
+                        if (!wordAnswered && isGameRunning) {
+                            startRecognitionForWord();
+                        }
+                    }, 200);
                 }
             };
 
             recognition.onerror = (event) => {
-                console.error('Erro no reconhecimento:', event.error);
-                if (event.error !== 'no-speech' && timerInterval) {
+                console.log('Erro reconhecimento:', event.error);
+                if (isGameRunning && !wordAnswered && event.error !== 'aborted') {
                     setTimeout(() => {
-                        try { recognition.start(); } catch(e) {}
+                        if (isGameRunning && !wordAnswered) {
+                            startRecognitionForWord();
+                        }
                     }, 100);
                 }
             };
 
             recognition.onend = () => {
-                if (timerInterval) {
-                    try { recognition.start(); } catch(e) {}
+                if (isGameRunning && !wordAnswered) {
+                    setTimeout(() => {
+                        if (isGameRunning && !wordAnswered) {
+                            startRecognitionForWord();
+                        }
+                    }, 100);
                 }
             };
         } else {
@@ -681,11 +863,13 @@
                     countdownEl.style.animation = 'countdownPulse 1s ease-in-out';
                 } else if (count === 0) {
                     countdownEl.textContent = 'VAI!';
+                    countdownEl.style.color = '#27ae60';
                     countdownEl.style.animation = 'none';
                     countdownEl.offsetHeight;
                     countdownEl.style.animation = 'countdownPulse 1s ease-in-out';
                 } else {
                     clearInterval(countdownInterval);
+                    countdownEl.style.color = '#e74c3c';
                     document.getElementById('countdownOverlay').classList.add('hidden');
                     startGame();
                 }
@@ -697,11 +881,20 @@
             usedRealWords = [];
             usedPseudoWords = [];
             isRealWord = true;
-            timeRemaining = 90;
+            timeRemaining = GAME_TIME;
+            isGameRunning = true;
+            gameStartTime = Date.now();
+
+            // Iniciar vídeo de fundo
+            videoBackground.classList.remove('hidden');
+            bgVideo.currentTime = 0;
+            bgVideo.loop = true;
+            bgVideo.play().catch(e => console.log('Erro ao reproduzir vídeo:', e));
 
             document.getElementById('gameScreen').style.display = 'block';
             document.getElementById('userGreeting').textContent = `Jogador: ${userName}`;
             updateStats();
+            updateGoalIndicator();
 
             updateTimerDisplay();
             timerInterval = setInterval(() => {
@@ -712,11 +905,23 @@
                 }
             }, 1000);
 
-            if (recognition) {
-                try { recognition.start(); } catch(e) {}
-            }
-
             getNextWord();
+        }
+
+        function startRecognitionForWord() {
+            if (!recognition || !isGameRunning) return;
+            try {
+                recognition.start();
+            } catch(e) {
+                // Já está rodando
+            }
+        }
+
+        function stopRecognition() {
+            if (!recognition) return;
+            try {
+                recognition.abort();
+            } catch(e) {}
         }
 
         function updateTimerDisplay() {
@@ -735,7 +940,67 @@
             }
         }
 
+        function updateGoalIndicator() {
+            const indicator = document.getElementById('goalIndicator');
+            const progress = document.getElementById('goalProgress');
+            progress.textContent = stats.correct;
+            
+            if (stats.correct >= GOAL_WORDS) {
+                indicator.classList.add('achieved');
+                indicator.innerHTML = `✅ Meta atingida! <span id="goalProgress">${stats.correct}</span>/30 palavras`;
+            } else {
+                indicator.classList.remove('achieved');
+            }
+        }
+
+        function startWordTimer() {
+            wordTimeRemaining = WORD_TIME;
+            wordAnswered = false;
+            
+            const progressBar = document.getElementById('wordTimerProgress');
+            progressBar.style.width = '100%';
+            
+            const startTime = Date.now();
+            
+            wordTimerInterval = setInterval(() => {
+                const elapsed = Date.now() - startTime;
+                const remaining = WORD_TIME - elapsed;
+                const percentage = (remaining / WORD_TIME) * 100;
+                
+                progressBar.style.width = Math.max(0, percentage) + '%';
+                
+                if (remaining <= 0) {
+                    clearWordTimer();
+                    if (!wordAnswered && isGameRunning) {
+                        // Tempo esgotado para esta palavra - conta como erro
+                        wordAnswered = true;
+                        stopRecognition();
+                        stats.incorrect++;
+                        stats.total++;
+                        showResult(`⏱️ Tempo esgotado!`, 'error');
+                        updateStats();
+                        setTimeout(getNextWord, 500);
+                    }
+                }
+            }, 50);
+
+            // Iniciar reconhecimento
+            startRecognitionForWord();
+        }
+
+        function clearWordTimer() {
+            if (wordTimerInterval) {
+                clearInterval(wordTimerInterval);
+                wordTimerInterval = null;
+            }
+        }
+
         function getNextWord() {
+            if (!isGameRunning) return;
+            
+            stopRecognition();
+            clearWordTimer();
+            
             let wordList;
             
             if (isRealWord) {
@@ -759,15 +1024,26 @@
             isRealWord = !isRealWord;
             document.getElementById('wordDisplay').textContent = currentWord.toUpperCase();
             document.getElementById('result').classList.add('hidden');
+            
+            // Iniciar timer de 3 segundos para esta palavra
+            setTimeout(() => {
+                if (isGameRunning) {
+                    startWordTimer();
+                }
+            }, 100);
         }
 
         function normalizeText(text) {
             text = text.toLowerCase().trim();
+            // Remover pontuação
+            text = text.replace(/[.,!?;:'"()]/g, '');
             const replacements = {
-                'á': 'a', 'à': 'a', 'ã': 'a', 'â': 'a',
-                'é': 'e', 'ê': 'e', 'í': 'i',
-                'ó': 'o', 'ô': 'o', 'õ': 'o',
-                'ú': 'u', 'ü': 'u', 'ç': 'c'
+                'á': 'a', 'à': 'a', 'ã': 'a', 'â': 'a', 'ä': 'a',
+                'é': 'e', 'ê': 'e', 'ë': 'e',
+                'í': 'i', 'ï': 'i',
+                'ó': 'o', 'ô': 'o', 'õ': 'o', 'ö': 'o',
+                'ú': 'u', 'ü': 'u', 'ù': 'u',
+                'ç': 'c', 'ñ': 'n'
             };
             for (let [old, newChar] of Object.entries(replacements)) {
                 text = text.replace(new RegExp(old, 'g'), newChar);
@@ -807,10 +1083,12 @@
         }
 
         function checkWord(spokenWord) {
+            if (!isGameRunning) return;
+            
             const expected = normalizeText(currentWord);
             const spoken = normalizeText(spokenWord);
             const similarity = calculateSimilarity(expected, spoken);
-            const isCorrect = similarity >= 75;
+            const isCorrect = similarity >= 70; // 70% de similaridade
             
             if (isCorrect) {
                 stats.correct++;
@@ -822,7 +1100,13 @@
 
             stats.total++;
             updateStats();
-            setTimeout(getNextWord, 600);
+            updateGoalIndicator();
+            
+            setTimeout(() => {
+                if (isGameRunning) {
+                    getNextWord();
+                }
+            }, 400);
         }
 
         function showResult(message, type) {
@@ -839,76 +1123,99 @@
         }
 
         function endGame() {
+            isGameRunning = false;
+            gameEndTime = Date.now();
+            
             clearInterval(timerInterval);
             timerInterval = null;
-            if (recognition) {
-                try { recognition.stop(); } catch(e) {}
-            }
+            clearWordTimer();
+            stopRecognition();
+            
+            // Parar vídeo de fundo
+            bgVideo.pause();
+            videoBackground.classList.add('hidden');
 
-            saveToRanking(userName, stats.correct);
+            const timeUsed = Math.round((gameEndTime - gameStartTime) / 1000);
+            const success = stats.correct >= GOAL_WORDS;
+
+            if (!success) {
+                // Mostrar explosão
+                explosionOverlay.classList.add('active');
+                explosionVideo.currentTime = 0;
+                explosionVideo.play().catch(e => console.log('Erro vídeo explosão:', e));
+                
+                explosionVideo.onended = () => {
+                    explosionOverlay.classList.remove('active');
+                    showResults(timeUsed, success);
+                };
+                
+                // Fallback se o vídeo não carregar
+                setTimeout(() => {
+                    if (explosionOverlay.classList.contains('active')) {
+                        explosionOverlay.classList.remove('active');
+                        showResults(timeUsed, success);
+                    }
+                }, 5000);
+            } else {
+                showResults(timeUsed, success);
+            }
+        }
+
+        function showResults(timeUsed, success) {
+            saveToRanking(userName, stats.correct, timeUsed);
 
             document.getElementById('gameScreen').style.display = 'none';
             document.getElementById('resultsScreen').style.display = 'block';
-            document.getElementById('finalUserName').textContent = `Parabéns, ${userName}!`;
+            
+            const titleEl = document.getElementById('resultTitle');
+            const scoreEl = document.getElementById('finalScore');
+            
+            if (success) {
+                titleEl.textContent = '🎉 Parabéns! Você sobreviveu!';
+                titleEl.style.color = '#27ae60';
+                scoreEl.className = 'final-score success';
+            } else {
+                titleEl.textContent = '💥 BOOM! A bomba explodiu!';
+                titleEl.style.color = '#e74c3c';
+                scoreEl.className = 'final-score fail';
+            }
+            
+            document.getElementById('finalUserName').textContent = `Jogador: ${userName}`;
             document.getElementById('finalScore').textContent = stats.correct;
+            
+            const minutes = Math.floor(timeUsed / 60);
+            const seconds = timeUsed % 60;
+            document.getElementById('finalTime').textContent = 
+                `Tempo: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 
             displayRanking();
         }
 
-        function saveToRanking(name, score) {
-            // Salvar localmente primeiro
+        function saveToRanking(name, score, time) {
             let ranking = JSON.parse(localStorage.getItem('leituraOuBombaRanking') || '[]');
             ranking.push({
                 name: name,
                 score: score,
+                time: time,
                 date: new Date().toLocaleDateString('pt-BR')
             });
-            ranking.sort((a, b) => b.score - a.score);
-            ranking = ranking.slice(0, 20);
+            
+            // Ordenar: mais palavras primeiro, depois menor tempo
+            ranking.sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                return (a.time || 999) - (b.time || 999);
+            });
+            
+            ranking = ranking.slice(0, 10); // Top 10
             localStorage.setItem('leituraOuBombaRanking', JSON.stringify(ranking));
             
-            // Tentar salvar no servidor (GitHub via API)
+            // Tentar salvar no servidor
             if (!isLocalhost) {
                 fetch('/api/ranking', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: name, score: score })
-                }).then(response => response.json())
-                .then(data => {
-                    if (data.ranking) {
-                        // Mesclar ranking do servidor com local
-                        mergeRankings(data.ranking);
-                    }
+                    body: JSON.stringify({ name, score, time })
                 }).catch(err => console.log('Erro ao salvar no servidor:', err));
-            }
-        }
-        
-        function mergeRankings(serverRanking) {
-            let localRanking = JSON.parse(localStorage.getItem('leituraOuBombaRanking') || '[]');
-            
-            // Combinar e ordenar
-            serverRanking.forEach(entry => {
-                if (!localRanking.some(local => local.name === entry.name && local.score === entry.score)) {
-                    localRanking.push(entry);
-                }
-            });
-            
-            localRanking.sort((a, b) => b.score - a.score);
-            localRanking = localRanking.slice(0, 20);
-            localStorage.setItem('leituraOuBombaRanking', JSON.stringify(localRanking));
-        }
-        
-        async function loadRankingFromServer() {
-            if (!isLocalhost) {
-                try {
-                    const response = await fetch('/api/ranking');
-                    const data = await response.json();
-                    if (data.ranking && data.ranking.length > 0) {
-                        mergeRankings(data.ranking);
-                    }
-                } catch(err) {
-                    console.log('Erro ao carregar ranking do servidor:', err);
-                }
             }
         }
 
@@ -917,7 +1224,7 @@
             const listEl = document.getElementById('rankingList');
             listEl.innerHTML = '';
 
-            ranking.forEach((entry, index) => {
+            ranking.slice(0, 10).forEach((entry, index) => {
                 const li = document.createElement('li');
                 li.className = 'ranking-item';
                 
@@ -926,11 +1233,18 @@
                 else if (index === 2) li.classList.add('bronze');
 
                 const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}º`;
+                
+                const timeMinutes = Math.floor((entry.time || 0) / 60);
+                const timeSeconds = (entry.time || 0) % 60;
+                const timeStr = `${timeMinutes}:${timeSeconds.toString().padStart(2, '0')}`;
 
                 li.innerHTML = `
                     <span class="ranking-position">${medal}</span>
                     <span class="ranking-name">${entry.name}</span>
-                    <span class="ranking-score">${entry.score} ✅</span>
+                    <div class="ranking-info">
+                        <div class="ranking-score">${entry.score} ✅</div>
+                        <div class="ranking-time">⏱️ ${timeStr}</div>
+                    </div>
                 `;
                 listEl.appendChild(li);
             });
@@ -950,34 +1264,24 @@
         
         function closeResetModal() {
             document.getElementById('resetModal').classList.remove('active');
-            document.getElementById('resetPassword').value = '';
-            document.getElementById('resetError').style.display = 'none';
         }
         
-        async function confirmReset() {
+        function confirmReset() {
             const password = document.getElementById('resetPassword').value;
             
             if (password === 'Camila') {
-                // Limpar ranking local
                 localStorage.removeItem('leituraOuBombaRanking');
                 
-                // Tentar limpar no servidor
                 if (!isLocalhost) {
-                    try {
-                        await fetch('/api/ranking', {
-                            method: 'DELETE',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ password: password })
-                        });
-                    } catch(err) {
-                        console.log('Erro ao resetar no servidor:', err);
-                    }
+                    fetch('/api/ranking', {
+                        method: 'DELETE',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password })
+                    }).catch(err => console.log('Erro ao resetar no servidor:', err));
                 }
                 
                 closeResetModal();
                 alert('✅ Ranking resetado com sucesso!');
-                
-                // Atualizar display se estiver na tela de resultados
                 displayRanking();
             } else {
                 document.getElementById('resetError').style.display = 'block';
@@ -986,22 +1290,13 @@
             }
         }
         
-        // Permitir Enter no campo de senha
         document.getElementById('resetPassword').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                confirmReset();
-            }
+            if (e.key === 'Enter') confirmReset();
         });
         
-        // Fechar modal clicando fora
         document.getElementById('resetModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeResetModal();
-            }
+            if (e.target === this) closeResetModal();
         });
-        
-        // Carregar ranking do servidor ao iniciar
-        loadRankingFromServer();
 
         function restartGame() {
             document.getElementById('resultsScreen').style.display = 'none';
@@ -1009,6 +1304,11 @@
             document.getElementById('userName').value = '';
             document.getElementById('startBtn').disabled = true;
             document.getElementById('result').classList.add('hidden');
+            
+            // Resetar indicador de meta
+            const indicator = document.getElementById('goalIndicator');
+            indicator.classList.remove('achieved');
+            indicator.innerHTML = '🎯 Meta: <span id="goalProgress">0</span>/30 palavras';
         }
     </script>
 </body>
