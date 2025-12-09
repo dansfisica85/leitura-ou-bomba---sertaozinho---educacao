@@ -232,15 +232,18 @@
             padding: 50px 40px;
             border-radius: 15px;
             text-align: center;
-            font-size: 3.5em;
+            font-size: clamp(2.2rem, 6vw, 4.5rem);
+            line-height: 1.15;
             font-weight: bold;
             margin-bottom: 20px;
-            min-height: 160px;
+            min-height: 220px;
             display: flex;
             align-items: center;
             justify-content: center;
-            letter-spacing: 3px;
+            letter-spacing: 2px;
             text-transform: uppercase;
+            word-break: break-word;
+            white-space: pre-wrap;
             box-shadow: 0 10px 30px rgba(231, 76, 60, 0.4);
         }
 
@@ -332,7 +335,7 @@
             display: none !important;
         }
 
-        /* Meta de 30 palavras */
+        /* Meta de 10 palavras */
         .goal-indicator {
             background: linear-gradient(135deg, #3498db, #2980b9);
             color: white;
@@ -650,9 +653,9 @@
             }
 
             .word-display {
-                font-size: 2.2em;
+                font-size: clamp(1.8rem, 5.5vw, 2.5rem);
                 padding: 35px 25px;
-                min-height: 120px;
+                min-height: 150px;
                 letter-spacing: 2px;
             }
 
@@ -790,10 +793,13 @@
             }
 
             .word-display {
-                font-size: 1.6em;
+                font-size: clamp(1.4rem, 6.5vw, 2.1rem);
                 padding: 25px 15px;
-                min-height: 90px;
+                min-height: 140px;
                 letter-spacing: 1px;
+                line-height: 1.2;
+                word-break: break-word;
+                white-space: pre-wrap;
                 border-radius: 10px;
                 margin-bottom: 12px;
             }
@@ -1077,9 +1083,9 @@
             }
 
             .word-display {
-                font-size: 1.5em;
+                font-size: clamp(1.2rem, 5vw, 1.6rem);
                 padding: 15px 10px;
-                min-height: 60px;
+                min-height: 90px;
                 margin-bottom: 8px;
             }
 
@@ -1148,7 +1154,7 @@
                 <span>INICIAR</span>
             </button>
             <p style="color: #e74c3c; font-size: 0.95em; margin-top: 10px;">
-                ⚠️ Acerte pelo menos <strong>30 palavras</strong> antes do tempo acabar!
+                ⚠️ Acerte pelo menos <strong>10 palavras</strong> antes do tempo acabar!
             </p>
         </div>
 
@@ -1160,10 +1166,10 @@
         <!-- Tela do Jogo -->
         <div id="gameScreen" class="game-screen">
             <p id="userGreeting" class="user-greeting"></p>
-            <div id="timerDisplay" class="timer-display">01:30</div>
+            <div id="timerDisplay" class="timer-display">01:00</div>
             
             <div id="goalIndicator" class="goal-indicator">
-                🎯 Meta: <span id="goalProgress">0</span>/30 palavras
+                🎯 Meta: <span id="goalProgress">0</span>/10 palavras
             </div>
             
             <div class="word-timer-bar">
@@ -1237,8 +1243,12 @@
     <script>
         // ===== CONFIGURAÇÕES =====
         const WORD_TIME = 3000; // 3 segundos por palavra
-        const GOAL_WORDS = 30; // Meta de palavras para não explodir
-        const GAME_TIME = 90; // 1:30 em segundos
+        const GOAL_WORDS = 10; // Meta de palavras para não explodir
+        const GAME_TIME = 60; // 60 segundos totais
+        const INTERIM_SIMILARITY_THRESHOLD = 80; // Dispara correção ainda durante a fala
+        const FINAL_SIMILARITY_THRESHOLD = 65; // Precisão mínima para considerar correto
+        const MIN_SIMILARITY_TO_DISPLAY = 40; // Evita piscar com lixo sonoro
+        const MAX_RECOGNITION_ALTERNATIVES = 20; // Mais alternativas para captar variações
         const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 
         // ===== PALAVRAS =====
@@ -1297,6 +1307,7 @@
         let gameEndTime = null;
         let wordAnswered = false;
         let isGameRunning = false;
+        let recognitionRestarting = false;
 
         // ===== ELEMENTOS =====
         const bgVideo = document.getElementById('bgVideo');
@@ -1327,65 +1338,67 @@
             recognition.lang = 'pt-BR';
             recognition.continuous = true;
             recognition.interimResults = true;
-            recognition.maxAlternatives = 10; // Mais alternativas para melhor precisão
+            recognition.maxAlternatives = MAX_RECOGNITION_ALTERNATIVES; // Mais alternativas para melhor precisão
 
             recognition.onresult = (event) => {
                 if (!isGameRunning || wordAnswered) return;
-                
+
+                const normalizedExpected = normalizeText(currentWord);
                 let bestTranscript = '';
                 let bestSimilarity = 0;
+                let bestConfidence = 0;
                 let isFinalResult = false;
-                
-                // Procurar por resultados
+
                 for (let i = event.resultIndex; i < event.results.length; i++) {
                     const result = event.results[i];
-                    
-                    // Verificar TODAS as alternativas do reconhecimento
+                    if (result.isFinal) isFinalResult = true;
+
                     for (let j = 0; j < result.length; j++) {
-                        const transcript = result[j].transcript.toLowerCase().trim();
-                        
-                        // Extrair palavras individuais do transcript
-                        const words = transcript.split(/\s+/);
-                        
+                        const alternative = result[j];
+                        const transcript = alternative.transcript.toLowerCase().trim();
+                        const confidence = alternative.confidence || 0;
+                        const normalizedTranscript = normalizeText(transcript);
+
+                        const words = normalizedTranscript.split(/\s+/);
+
                         for (const word of words) {
                             if (word.length < 2) continue;
-                            
+
                             const similarity = calculateSimilarity(
-                                normalizeText(currentWord), 
-                                normalizeText(word)
+                                normalizedExpected,
+                                word
                             );
-                            
-                            if (similarity > bestSimilarity) {
+
+                            const isBetter = similarity > bestSimilarity || (similarity === bestSimilarity && confidence > bestConfidence);
+                            if (isBetter) {
                                 bestSimilarity = similarity;
                                 bestTranscript = word;
+                                bestConfidence = confidence;
                             }
                         }
-                        
-                        // Também verificar o transcript completo
+
                         const fullSimilarity = calculateSimilarity(
-                            normalizeText(currentWord), 
-                            normalizeText(transcript)
+                            normalizedExpected,
+                            normalizedTranscript
                         );
-                        
-                        if (fullSimilarity > bestSimilarity) {
+
+                        const isBetterFull = fullSimilarity > bestSimilarity || (fullSimilarity === bestSimilarity && confidence > bestConfidence);
+                        if (isBetterFull) {
                             bestSimilarity = fullSimilarity;
                             bestTranscript = transcript;
+                            bestConfidence = confidence;
                         }
                     }
-                    
-                    if (result.isFinal) {
-                        isFinalResult = true;
-                    }
                 }
-                
-                // Mostrar o que está sendo detectado em tempo real
-                if (bestTranscript && !isFinalResult) {
+
+                const hasInterimHit = bestTranscript && !isFinalResult && bestSimilarity >= INTERIM_SIMILARITY_THRESHOLD;
+                const hasFinalHit = bestTranscript && isFinalResult && bestSimilarity >= FINAL_SIMILARITY_THRESHOLD;
+
+                if (bestTranscript && !isFinalResult && bestSimilarity >= MIN_SIMILARITY_TO_DISPLAY) {
                     showInterimResult(bestTranscript, bestSimilarity);
                 }
-                
-                // Se temos um resultado final OU uma correspondência muito boa (>=60%), processar
-                if (bestTranscript && (isFinalResult || bestSimilarity >= 60)) {
-                    console.log('Processando:', bestTranscript, 'Similaridade:', bestSimilarity);
+
+                if (hasInterimHit || hasFinalHit) {
                     wordAnswered = true;
                     clearWordTimer();
                     checkWord(bestTranscript);
@@ -1556,7 +1569,7 @@
             
             if (stats.correct >= GOAL_WORDS) {
                 indicator.classList.add('achieved');
-                indicator.innerHTML = `✅ Meta atingida! <span id="goalProgress">${stats.correct}</span>/30 palavras`;
+                indicator.innerHTML = `✅ Meta atingida! <span id="goalProgress">${stats.correct}</span>/${GOAL_WORDS} palavras`;
             } else {
                 indicator.classList.remove('achieved');
             }
@@ -1714,7 +1727,7 @@
             const expected = normalizeText(currentWord);
             const spoken = normalizeText(spokenWord);
             const similarity = calculateSimilarity(expected, spoken);
-            const isCorrect = similarity >= 60; // 60% de similaridade (mais tolerante)
+            const isCorrect = similarity >= FINAL_SIMILARITY_THRESHOLD; // Mais precisão sem perder sensibilidade
             
             if (isCorrect) {
                 stats.correct++;
@@ -1942,7 +1955,7 @@
             // Resetar indicador de meta
             const indicator = document.getElementById('goalIndicator');
             indicator.classList.remove('achieved');
-            indicator.innerHTML = '🎯 Meta: <span id="goalProgress">0</span>/30 palavras';
+            indicator.innerHTML = `🎯 Meta: <span id="goalProgress">0</span>/${GOAL_WORDS} palavras`;
         }
     </script>
 </body>

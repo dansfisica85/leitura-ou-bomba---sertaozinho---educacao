@@ -16,7 +16,7 @@ Aplicação web de reconhecimento de voz para teste de leitura com palavras reai
 
 ## 📋 Funcionalidades
 
-- ✅ Cronômetro de 1 minuto e 30 segundos
+- ✅ Cronômetro de 60 segundos
 - ✅ Contagem regressiva 3, 2, 1, VAI! antes de iniciar
 - ✅ Gravação de voz automática
 - ✅ Alternância entre palavras reais e pseudopalavras
@@ -90,7 +90,7 @@ Para resetar o ranking:
 3. Aguarde a contagem regressiva (3, 2, 1, VAI!)
 4. Leia as palavras que aparecem na tela em voz alta
 5. O sistema reconhece automaticamente sua voz
-6. Tente acertar o máximo de palavras em 1:30
+6. Tente acertar o máximo de palavras em 1:00
 7. Ao final, veja sua pontuação e o ranking!
 
 ## 🔧 Tecnologias Utilizadas
