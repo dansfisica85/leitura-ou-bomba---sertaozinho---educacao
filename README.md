@@ -19,16 +19,19 @@ Aplicação web gamificada de reconhecimento de voz para avaliação de fluênci
 O jogo possui **3 fases**. O jogador precisa acertar **10 palavras em cada fase** para avançar. Se o tempo esgotar antes de atingir a meta, a bomba explode!
 
 ### 📖 Fase 1 — Palavras Reais
+
 - Palavras do vocabulário comum são exibidas uma por vez
 - O jogador deve ler em voz alta
 - Meta: 10 acertos em 60 segundos
 
 ### 🔤 Fase 2 — Pseudopalavras
+
 - Palavras inventadas (sem significado) são exibidas
 - Avalia a decodificação fonológica
 - Meta: 10 acertos em 60 segundos
 
 ### 📄 Fase 3 — Texto Completo
+
 - Um texto inteiro aparece formatado na tela
 - O jogador lê sequencialmente
 - Palavras corretas ficam **verdes**, erradas ficam **vermelhas**
