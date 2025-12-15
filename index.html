@@ -1154,8 +1154,13 @@
                 <span>INICIAR</span>
             </button>
             <p style="color: #e74c3c; font-size: 0.95em; margin-top: 10px;">
-                ⚠️ Acerte pelo menos <strong>10 palavras</strong> antes do tempo acabar!
+                ⚠️ Acerte <strong>10 palavras</strong> em cada fase para avançar!
             </p>
+            <div style="margin-top: 15px; font-size: 0.9em; color: #7f8c8d;">
+                <p><strong>Fase 1:</strong> Palavras Reais</p>
+                <p><strong>Fase 2:</strong> Pseudopalavras</p>
+                <p><strong>Fase 3:</strong> Texto Completo</p>
+            </div>
         </div>
 
         <!-- Contagem Regressiva (overlay) -->
@@ -1168,6 +1173,9 @@
             <p id="userGreeting" class="user-greeting"></p>
             <div id="timerDisplay" class="timer-display">01:00</div>
             
+            <div id="phaseIndicator" style="background: linear-gradient(135deg, #9b59b6, #8e44ad); color: white; padding: 8px 16px; border-radius: 20px; font-size: 1em; margin-bottom: 10px; display: inline-block;">
+                📖 Fase <span id="currentPhase">1</span>/3 - <span id="phaseType">Palavras Reais</span>
+            </div>
             <div id="goalIndicator" class="goal-indicator">
                 🎯 Meta: <span id="goalProgress">0</span>/10 palavras
             </div>
@@ -1243,13 +1251,18 @@
     <script>
         // ===== CONFIGURAÇÕES =====
         const WORD_TIME = 3000; // 3 segundos por palavra
-        const GOAL_WORDS = 10; // Meta de palavras para não explodir
-        const GAME_TIME = 60; // 60 segundos totais
+        const GOAL_WORDS = 10; // Meta de palavras por fase
+        const PHASE_TIME = 60; // 60 segundos por fase
+        const TOTAL_PHASES = 3; // Total de fases
         const INTERIM_SIMILARITY_THRESHOLD = 80; // Dispara correção ainda durante a fala
         const FINAL_SIMILARITY_THRESHOLD = 65; // Precisão mínima para considerar correto
         const MIN_SIMILARITY_TO_DISPLAY = 40; // Evita piscar com lixo sonoro
         const MAX_RECOGNITION_ALTERNATIVES = 20; // Mais alternativas para captar variações
         const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+        // Texto completo para a Fase 3
+        const textoFase3 = "O menino correu pelo parque enquanto o cachorro latia feliz. As flores coloridas balançavam com o vento suave da tarde. A mãe chamou as crianças para merendar bolo de chocolate. Todos sentaram na varanda e conversaram sobre o dia na escola.";
+        const palavrasTextoFase3 = textoFase3.split(/\s+/).map(p => p.replace(/[.,!?;:]/g, '').toLowerCase());
 
         // ===== PALAVRAS =====
         const palavrasReais = [
@@ -1293,16 +1306,19 @@
 
         // ===== VARIÁVEIS GLOBAIS =====
         let currentWord = '';
-        let isRealWord = true;
+        let currentPhase = 1; // Fase atual (1, 2 ou 3)
+        let phaseStats = { correct: 0, incorrect: 0, total: 0 }; // Stats da fase atual
+        let totalStats = { correct: 0, incorrect: 0, total: 0 }; // Stats totais do jogo
         let usedRealWords = [];
         let usedPseudoWords = [];
+        let textoWordResults = []; // Resultados de validação: 'correct', 'incorrect', ou null
+        let currentTextoWordIndex = 0; // Índice da palavra atual no texto (fase 3)
         let recognition = null;
         let timerInterval = null;
         let wordTimerInterval = null;
-        let timeRemaining = GAME_TIME;
+        let timeRemaining = PHASE_TIME;
         let wordTimeRemaining = WORD_TIME;
         let userName = '';
-        let stats = { correct: 0, incorrect: 0, total: 0 };
         let gameStartTime = null;
         let gameEndTime = null;
         let wordAnswered = false;
@@ -1490,14 +1506,17 @@
         }
 
         function startGame() {
-            stats = { correct: 0, incorrect: 0, total: 0 };
+            currentPhase = 1;
+            phaseStats = { correct: 0, incorrect: 0, total: 0 };
+            totalStats = { correct: 0, incorrect: 0, total: 0 };
             usedRealWords = [];
             usedPseudoWords = [];
-            isRealWord = true;
-            timeRemaining = GAME_TIME;
+            textoWordResults = new Array(palavrasTextoFase3.length).fill(null);
+            currentTextoWordIndex = 0;
+            timeRemaining = PHASE_TIME;
             isGameRunning = true;
             gameStartTime = Date.now();
-            recognitionRestarting = false; // Resetar flag para novo jogo
+            recognitionRestarting = false;
 
             // Iniciar vídeo no cabeçalho
             videoHeader.classList.remove('hidden');
@@ -1509,17 +1528,93 @@
             document.getElementById('userGreeting').textContent = `Jogador: ${userName}`;
             updateStats();
             updateGoalIndicator();
+            updatePhaseIndicator();
 
             updateTimerDisplay();
             timerInterval = setInterval(() => {
                 timeRemaining--;
                 updateTimerDisplay();
                 if (timeRemaining <= 0) {
-                    endGame();
+                    endPhase(false); // Tempo esgotado na fase
                 }
             }, 1000);
 
             getNextWord();
+        }
+
+        function updatePhaseIndicator() {
+            document.getElementById('currentPhase').textContent = currentPhase;
+            const phaseTypes = ['Palavras Reais', 'Pseudopalavras', 'Texto Completo'];
+            document.getElementById('phaseType').textContent = phaseTypes[currentPhase - 1];
+            
+            // Atualizar cor do indicador de fase
+            const phaseIndicator = document.getElementById('phaseIndicator');
+            const colors = [
+                'linear-gradient(135deg, #3498db, #2980b9)', // Fase 1 - Azul
+                'linear-gradient(135deg, #9b59b6, #8e44ad)', // Fase 2 - Roxo
+                'linear-gradient(135deg, #e74c3c, #c0392b)'  // Fase 3 - Vermelho
+            ];
+            phaseIndicator.style.background = colors[currentPhase - 1];
+        }
+
+        function startNextPhase() {
+            currentPhase++;
+            phaseStats = { correct: 0, incorrect: 0, total: 0 };
+            timeRemaining = PHASE_TIME;
+            
+            if (currentPhase === 3) {
+                currentTextoWordIndex = 0;
+                textoWordResults = new Array(palavrasTextoFase3.length).fill(null);
+            }
+            
+            updatePhaseIndicator();
+            updateGoalIndicator();
+            updateStats();
+            
+            // Mostrar transição de fase
+            showPhaseTransition();
+        }
+
+        function showPhaseTransition() {
+            stopRecognition();
+            clearWordTimer();
+            clearInterval(timerInterval);
+            
+            const phaseNames = ['Palavras Reais', 'Pseudopalavras', 'Texto Completo'];
+            const wordDisplay = document.getElementById('wordDisplay');
+            wordDisplay.innerHTML = `🎉 Fase ${currentPhase - 1} concluída!<br><br>Próxima: ${phaseNames[currentPhase - 1]}`;
+            wordDisplay.style.fontSize = 'clamp(1.5rem, 4vw, 2.5rem)';
+            
+            setTimeout(() => {
+                wordDisplay.style.fontSize = '';
+                
+                // Reiniciar timer da fase
+                timerInterval = setInterval(() => {
+                    timeRemaining--;
+                    updateTimerDisplay();
+                    if (timeRemaining <= 0) {
+                        endPhase(false);
+                    }
+                }, 1000);
+                
+                getNextWord();
+            }, 2000);
+        }
+
+        function endPhase(success) {
+            if (!success) {
+                // Falhou na fase - fim de jogo
+                endGame();
+                return;
+            }
+            
+            // Passou na fase
+            if (currentPhase < TOTAL_PHASES) {
+                startNextPhase();
+            } else {
+                // Completou todas as fases!
+                endGame();
+            }
         }
 
         function startRecognitionForWord() {
@@ -1565,11 +1660,11 @@
         function updateGoalIndicator() {
             const indicator = document.getElementById('goalIndicator');
             const progress = document.getElementById('goalProgress');
-            progress.textContent = stats.correct;
+            progress.textContent = phaseStats.correct;
             
-            if (stats.correct >= GOAL_WORDS) {
+            if (phaseStats.correct >= GOAL_WORDS) {
                 indicator.classList.add('achieved');
-                indicator.innerHTML = `✅ Meta atingida! <span id="goalProgress">${stats.correct}</span>/${GOAL_WORDS} palavras`;
+                indicator.innerHTML = `✅ Meta atingida! <span id="goalProgress">${phaseStats.correct}</span>/${GOAL_WORDS} palavras`;
             } else {
                 indicator.classList.remove('achieved');
             }
@@ -1597,10 +1692,20 @@
                         // Tempo esgotado para esta palavra - conta como erro
                         wordAnswered = true;
                         stopRecognition();
-                        stats.incorrect++;
-                        stats.total++;
-                        showResult(`⏱️ Tempo esgotado!`, 'error');
+                        phaseStats.incorrect++;
+                        phaseStats.total++;
+                        totalStats.incorrect++;
+                        totalStats.total++;
+                        showResult(`⏱️ Tempo esgotado! Esperado: ${currentWord}`, 'error');
                         updateStats();
+                        
+                        // Na fase 3, marcar como incorreto e atualizar visualização
+                        if (currentPhase === 3) {
+                            textoWordResults[currentTextoWordIndex] = 'incorrect';
+                            currentTextoWordIndex++;
+                            renderTextoFase3();
+                        }
+                        
                         setTimeout(getNextWord, 500);
                     }
                 }
@@ -1620,31 +1725,52 @@
         function getNextWord() {
             if (!isGameRunning) return;
             
+            // Verificar se atingiu a meta da fase
+            if (phaseStats.correct >= GOAL_WORDS) {
+                endPhase(true);
+                return;
+            }
+            
             stopRecognition();
             clearWordTimer();
             
-            let wordList;
+            const wordDisplay = document.getElementById('wordDisplay');
             
-            if (isRealWord) {
-                wordList = uniqueReais.filter(w => !usedRealWords.includes(w));
+            if (currentPhase === 1) {
+                // Fase 1: Palavras Reais
+                let wordList = uniqueReais.filter(w => !usedRealWords.includes(w));
                 if (wordList.length === 0) {
                     usedRealWords = [];
                     wordList = uniqueReais;
                 }
                 currentWord = wordList[Math.floor(Math.random() * wordList.length)];
                 usedRealWords.push(currentWord);
-            } else {
-                wordList = uniquePseudo.filter(w => !usedPseudoWords.includes(w));
+                wordDisplay.textContent = currentWord.toUpperCase();
+                wordDisplay.style.fontSize = '';
+                
+            } else if (currentPhase === 2) {
+                // Fase 2: Pseudopalavras
+                let wordList = uniquePseudo.filter(w => !usedPseudoWords.includes(w));
                 if (wordList.length === 0) {
                     usedPseudoWords = [];
                     wordList = uniquePseudo;
                 }
                 currentWord = wordList[Math.floor(Math.random() * wordList.length)];
                 usedPseudoWords.push(currentWord);
+                wordDisplay.textContent = currentWord.toUpperCase();
+                wordDisplay.style.fontSize = '';
+                
+            } else if (currentPhase === 3) {
+                // Fase 3: Texto Completo - mostrar texto inteiro e destacar palavra atual
+                if (currentTextoWordIndex >= palavrasTextoFase3.length) {
+                    currentTextoWordIndex = 0; // Reiniciar se acabar
+                }
+                currentWord = palavrasTextoFase3[currentTextoWordIndex];
+                
+                // Renderizar texto com palavra atual destacada
+                renderTextoFase3();
             }
 
-            isRealWord = !isRealWord;
-            document.getElementById('wordDisplay').textContent = currentWord.toUpperCase();
             document.getElementById('result').classList.add('hidden');
             
             // Iniciar timer de 3 segundos para esta palavra
@@ -1653,6 +1779,39 @@
                     startWordTimer();
                 }
             }, 100);
+        }
+
+        function renderTextoFase3() {
+            const wordDisplay = document.getElementById('wordDisplay');
+            wordDisplay.style.fontSize = 'clamp(1.1rem, 2.5vw, 1.6rem)';
+            wordDisplay.style.textAlign = 'justify';
+            wordDisplay.style.lineHeight = '2.2';
+            wordDisplay.style.padding = '30px 40px';
+            wordDisplay.style.textTransform = 'none';
+            wordDisplay.style.letterSpacing = '0.5px';
+            
+            let html = '';
+            const palavras = textoFase3.split(/\s+/);
+            
+            for (let i = 0; i < palavras.length; i++) {
+                const palavra = palavras[i];
+                
+                if (i === currentTextoWordIndex) {
+                    // Palavra atual - destacar em amarelo com borda
+                    html += `<span style="background: #f1c40f; color: #000; padding: 4px 8px; border-radius: 6px; font-weight: bold; box-shadow: 0 2px 8px rgba(241,196,15,0.5);">${palavra}</span> `;
+                } else if (textoWordResults[i] === 'correct') {
+                    // Palavra lida corretamente - verde
+                    html += `<span style="color: #27ae60; font-weight: 600;">${palavra}</span> `;
+                } else if (textoWordResults[i] === 'incorrect') {
+                    // Palavra lida incorretamente - vermelho com tachado
+                    html += `<span style="color: #e74c3c; text-decoration: line-through; font-weight: 500;">${palavra}</span> `;
+                } else {
+                    // Palavra ainda não lida - cor normal
+                    html += `<span style="color: rgba(255,255,255,0.85);">${palavra}</span> `;
+                }
+            }
+            
+            wordDisplay.innerHTML = html;
         }
 
         function normalizeText(text) {
@@ -1727,17 +1886,34 @@
             const expected = normalizeText(currentWord);
             const spoken = normalizeText(spokenWord);
             const similarity = calculateSimilarity(expected, spoken);
-            const isCorrect = similarity >= FINAL_SIMILARITY_THRESHOLD; // Mais precisão sem perder sensibilidade
+            const isCorrect = similarity >= FINAL_SIMILARITY_THRESHOLD;
             
             if (isCorrect) {
-                stats.correct++;
+                phaseStats.correct++;
+                totalStats.correct++;
                 showResult(`✅ "${spokenWord}" (${similarity}%)`, 'success');
+                
+                // Na fase 3, marcar palavra como correta e atualizar visualização
+                if (currentPhase === 3) {
+                    textoWordResults[currentTextoWordIndex] = 'correct';
+                    currentTextoWordIndex++;
+                    renderTextoFase3(); // Atualizar texto em tempo real
+                }
             } else {
-                stats.incorrect++;
+                phaseStats.incorrect++;
+                totalStats.incorrect++;
                 showResult(`❌ "${spokenWord}" (${similarity}%) - Esperado: ${currentWord}`, 'error');
+                
+                // Na fase 3, marcar palavra como incorreta e avançar
+                if (currentPhase === 3) {
+                    textoWordResults[currentTextoWordIndex] = 'incorrect';
+                    currentTextoWordIndex++;
+                    renderTextoFase3(); // Atualizar texto em tempo real
+                }
             }
 
-            stats.total++;
+            phaseStats.total++;
+            totalStats.total++;
             updateStats();
             updateGoalIndicator();
             
@@ -1745,7 +1921,7 @@
                 if (isGameRunning) {
                     getNextWord();
                 }
-            }, 600); // Mais tempo para ver o resultado
+            }, 600);
         }
 
         function showResult(message, type) {
@@ -1764,9 +1940,9 @@
         }
 
         function updateStats() {
-            document.getElementById('correctCount').textContent = stats.correct;
-            document.getElementById('incorrectCount').textContent = stats.incorrect;
-            document.getElementById('totalCount').textContent = stats.total;
+            document.getElementById('correctCount').textContent = phaseStats.correct;
+            document.getElementById('incorrectCount').textContent = phaseStats.incorrect;
+            document.getElementById('totalCount').textContent = phaseStats.total;
         }
 
         function endGame() {
@@ -1783,12 +1959,13 @@
             videoHeader.classList.add('hidden');
 
             const timeUsed = Math.round((gameEndTime - gameStartTime) / 1000);
-            const success = stats.correct >= GOAL_WORDS;
+            // Sucesso = completou todas as 3 fases
+            const success = currentPhase === TOTAL_PHASES && phaseStats.correct >= GOAL_WORDS;
 
             if (!success) {
                 // Mostrar explosão em tela cheia a partir dos 8 segundos
                 explosionOverlay.classList.add('active');
-                explosionVideo.currentTime = 8; // Começar a partir dos 8 segundos
+                explosionVideo.currentTime = 8;
                 explosionVideo.play().catch(e => console.log('Erro vídeo explosão:', e));
                 
                 explosionVideo.onended = () => {
@@ -1796,20 +1973,19 @@
                     showResults(timeUsed, success);
                 };
                 
-                // Fallback se o vídeo não carregar (tempo maior para vídeo completo)
                 setTimeout(() => {
                     if (explosionOverlay.classList.contains('active')) {
                         explosionOverlay.classList.remove('active');
                         showResults(timeUsed, success);
                     }
-                }, 30000); // 30 segundos de fallback para vídeo completo
+                }, 30000);
             } else {
                 showResults(timeUsed, success);
             }
         }
 
         function showResults(timeUsed, success) {
-            saveToRanking(userName, stats.correct, timeUsed);
+            saveToRanking(userName, totalStats.correct, timeUsed);
 
             document.getElementById('gameScreen').style.display = 'none';
             document.getElementById('resultsScreen').style.display = 'block';
@@ -1818,22 +1994,22 @@
             const scoreEl = document.getElementById('finalScore');
             
             if (success) {
-                titleEl.textContent = '🎉 Parabéns! Você sobreviveu!';
+                titleEl.textContent = '🎉 Parabéns! Você completou todas as fases!';
                 titleEl.style.color = '#27ae60';
                 scoreEl.className = 'final-score success';
             } else {
-                titleEl.textContent = '💥 BOOM! A bomba explodiu!';
+                titleEl.innerHTML = `💥 BOOM! A bomba explodiu na Fase ${currentPhase}!`;
                 titleEl.style.color = '#e74c3c';
                 scoreEl.className = 'final-score fail';
             }
             
             document.getElementById('finalUserName').textContent = `Jogador: ${userName}`;
-            document.getElementById('finalScore').textContent = stats.correct;
+            document.getElementById('finalScore').textContent = totalStats.correct;
             
             const minutes = Math.floor(timeUsed / 60);
             const seconds = timeUsed % 60;
             document.getElementById('finalTime').textContent = 
-                `Tempo: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                `Tempo: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')} | Fases: ${success ? '3/3' : (currentPhase - 1) + '/3'}`;
 
             displayRanking();
         }
@@ -1956,6 +2132,20 @@
             const indicator = document.getElementById('goalIndicator');
             indicator.classList.remove('achieved');
             indicator.innerHTML = `🎯 Meta: <span id="goalProgress">0</span>/${GOAL_WORDS} palavras`;
+            
+            // Resetar indicador de fase
+            document.getElementById('currentPhase').textContent = '1';
+            document.getElementById('phaseType').textContent = 'Palavras Reais';
+            
+            // Resetar estilo do word display completamente
+            const wordDisplay = document.getElementById('wordDisplay');
+            wordDisplay.style.fontSize = '';
+            wordDisplay.style.textAlign = '';
+            wordDisplay.style.lineHeight = '';
+            wordDisplay.style.padding = '';
+            wordDisplay.style.textTransform = '';
+            wordDisplay.style.letterSpacing = '';
+            wordDisplay.textContent = 'Preparando...';
         }
     </script>
 </body>
